@@ -11,27 +11,34 @@ export default async function categoryCreateHandler({
   const categoryId = event.data.id
   const category = await productModuleService.retrieveProductCategory(categoryId)
 
-  const metadata = category.metadata || {}
+  console.log("📦 Handling category create:", {
+    id: category.id,
+    name: category.name,
+    description: category.description,
+    metadata: category.metadata,
+  })
 
+  const metadata = category.metadata || {}
   const updates: Record<string, string> = {}
 
-  // Only auto-generate Arabic fields if not already generated
-  const alreadyGenerated = metadata.auto_generated === true
+  const alreadyGenerated = metadata.auto_generated === "true"
 
   if (!alreadyGenerated) {
-    if (!metadata.name_ar && category.name) {
-      updates.name_ar = `ترجمة: ${category.name}`
+    if (!metadata.name_ar) {
+      const name = category.name?.trim()
+      updates.name_ar = name ? `ترجمة: ${name}` : "اسم باللغة العربية"
     }
 
-    if (!metadata.description_ar && category.description) {
-      updates.description_ar = `وصف: ${category.description}`
+    if (!metadata.description_ar) {
+      const description = category.description?.trim()
+      updates.description_ar = description ? `وصف: ${description}` : "وصف باللغة العربية"
     }
 
     if (Object.keys(updates).length > 0) {
-      updates.auto_generated = "true" // mark that these are auto-generated
+      updates.auto_generated = "true"
 
       await productModuleService.updateProductCategories(
-        categoryId,
+        { id: categoryId }, // ✅ correct usage
         {
           metadata: {
             ...metadata,
@@ -39,10 +46,13 @@ export default async function categoryCreateHandler({
           },
         }
       )
-      console.log(`Category ${categoryId} auto-filled Arabic metadata on create:`, updates)
+
+      console.log(`✅ Category ${categoryId} metadata added on create:`, updates)
+    } else {
+      console.log(`ℹ️ Category ${categoryId} already has name_ar and description_ar — nothing to do.`)
     }
   } else {
-    console.log(`Category ${categoryId} already has auto-generated Arabic metadata. Skipping.`)
+    console.log(`🚫 Category ${categoryId} already marked as auto-generated. Skipping.`)
   }
 }
 

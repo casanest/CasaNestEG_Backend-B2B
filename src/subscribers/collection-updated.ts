@@ -9,47 +9,40 @@ export default async function collectionUpdateHandler({
   const productModuleService = container.resolve<IProductModuleService>(Modules.PRODUCT)
 
   const collectionId = event.data.id
-  if (!collectionId) {
-    console.warn("No collection ID found in event")
-    return
-  }
-
-  // Retrieve current collection
   const collection = await productModuleService.retrieveProductCollection(collectionId)
-  if (!collection) {
-    console.warn(`Collection ${collectionId} not found`)
-    return
+
+  console.log(`The collection ${collection.id} was created`)
+
+  const metadata = collection.metadata || {}
+
+  const updates: Record<string, string | boolean> = {}
+
+  // Only auto-generate if not already done
+  const alreadyGenerated = metadata.auto_generated === true
+
+  if (!alreadyGenerated) {
+    if (!metadata.title_ar && collection.title) {
+      updates.title_ar = `ترجمة: ${collection.title}`
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updates.auto_generated = true
+
+      await productModuleService.updateProductCollections(
+        collectionId,
+        {
+          metadata: {
+            ...metadata,
+            ...updates,
+          },
+        }
+      )
+
+      console.log(`Collection ${collectionId} auto-filled Arabic metadata:`, updates)
+    }
+  } else {
+    console.log(`Collection ${collectionId} already has auto-generated Arabic metadata. Skipping update.`)
   }
-
-  // Prepare current metadata safely (clone it)
-  const metadata = { ...(collection.metadata ?? {}) }
-
-  // Don't overwrite existing arabic title or description if set manually
-  const updates: Record<string, string> = {}
-
-  if (!metadata.title_ar && collection.title) {
-    updates.title_ar = `ترجمة: ${collection.title}`
-  }
-
-
-  // If no updates, do nothing
-  if (Object.keys(updates).length === 0) {
-    console.log(`No new metadata to update for collection ${collectionId}`)
-    return
-  }
-
-  // Merge new metadata keys safely
-  const newMetadata = {
-    ...metadata,
-    ...updates,
-  }
-
-  // Update the collection metadata
-  await productModuleService.updateProductCollections(collectionId, {
-    metadata: newMetadata,
-  })
-
-  console.log(`Collection ${collectionId} metadata updated`, newMetadata)
 }
 
 export const config: SubscriberConfig = {

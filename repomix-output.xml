@@ -1,0 +1,3167 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+integration-tests/
+  http/
+    health.spec.ts
+    README.md
+  setup.js
+src/
+  admin/
+    README.md
+    tsconfig.json
+    vite-env.d.ts
+  api/
+    admin/
+      custom/
+        index-products/
+          route.ts
+        route.ts
+    store/
+      custom/
+        route.ts
+      search/
+        middlewares.ts
+        query-config.ts
+        route.ts
+        validators.ts
+    middlewares.ts
+    README.md
+  jobs/
+    README.md
+  links/
+    README.md
+  modules/
+    meilisearch/
+      index.ts
+      loader.ts
+      service.ts
+      types.ts
+    README.md
+  scripts/
+    enable-search-engine.ts
+    index-products.ts
+    medusa-config.ts
+    README.md
+    seed.ts
+  subscribers/
+    categories-created.ts
+    categories-updated.ts
+    collection-created.ts
+    collection-updated.ts
+    index-products.ts
+    product-created.ts
+    product-updated.ts
+    README.md
+    variant-created.ts
+    variant-updated.ts
+  workflows/
+    index-products.ts
+    README.md
+.gitignore
+instrumentation.ts
+jest.config.js
+medusa-config.ts
+package.json
+README.md
+tsconfig.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="integration-tests/http/health.spec.ts">
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+jest.setTimeout(60 * 1000)
+
+medusaIntegrationTestRunner({
+  inApp: true,
+  env: {},
+  testSuite: ({ api }) => {
+    describe("Ping", () => {
+      it("ping the server health endpoint", async () => {
+        const response = await api.get('/health')
+        expect(response.status).toEqual(200)
+      })
+    })
+  },
+})
+</file>
+
+<file path="integration-tests/http/README.md">
+# Integration Tests
+
+The `medusa-test-utils` package provides utility functions to create integration tests for your API routes and workflows.
+
+For example:
+
+```ts
+import { medusaIntegrationTestRunner } from "medusa-test-utils"
+
+medusaIntegrationTestRunner({
+  testSuite: ({ api, getContainer }) => {
+    describe("Custom endpoints", () => {
+      describe("GET /store/custom", () => {
+        it("returns correct message", async () => {
+          const response = await api.get(
+            `/store/custom`
+          )
+  
+          expect(response.status).toEqual(200)
+          expect(response.data).toHaveProperty("message")
+          expect(response.data.message).toEqual("Hello, World!")
+        })
+      })
+    })
+  }
+})
+```
+
+Learn more in [this documentation](https://docs.medusajs.com/learn/debugging-and-testing/testing-tools/integration-tests).
+</file>
+
+<file path="integration-tests/setup.js">
+const { MetadataStorage } = require("@mikro-orm/core")
+
+MetadataStorage.clear()
+</file>
+
+<file path="src/admin/README.md">
+# Admin Customizations
+
+You can extend the Medusa Admin to add widgets and new pages. Your customizations interact with API routes to provide merchants with custom functionalities.
+
+> Learn more about Admin Extensions in [this documentation](https://docs.medusajs.com/learn/fundamentals/admin).
+
+## Example: Create a Widget
+
+A widget is a React component that can be injected into an existing page in the admin dashboard.
+
+For example, create the file `src/admin/widgets/product-widget.tsx` with the following content:
+
+```tsx title="src/admin/widgets/product-widget.tsx"
+import { defineWidgetConfig } from "@medusajs/admin-sdk"
+
+// The widget
+const ProductWidget = () => {
+  return (
+    <div>
+      <h2>Product Widget</h2>
+    </div>
+  )
+}
+
+// The widget's configurations
+export const config = defineWidgetConfig({
+  zone: "product.details.after",
+})
+
+export default ProductWidget
+```
+
+This inserts a widget with the text “Product Widget” at the end of a product’s details page.
+</file>
+
+<file path="src/admin/tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["."]
+}
+</file>
+
+<file path="src/admin/vite-env.d.ts">
+/// <reference types="vite/client" />
+</file>
+
+<file path="src/api/admin/custom/index-products/route.ts">
+import {
+  AuthenticatedMedusaRequest,
+  MedusaResponse,
+} from '@medusajs/framework';
+import { indexProductsWorkflow } from '../../../../workflows/index-products';
+
+export async function POST(
+  req: AuthenticatedMedusaRequest,
+  res: MedusaResponse,
+): Promise<void> {
+  const result = await indexProductsWorkflow(req.scope).run();
+
+  res.json(result);
+}
+</file>
+
+<file path="src/api/admin/custom/route.ts">
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  res.sendStatus(200);
+}
+</file>
+
+<file path="src/api/store/custom/route.ts">
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  res.sendStatus(200);
+}
+</file>
+
+<file path="src/api/store/search/middlewares.ts">
+import { MiddlewareRoute } from '@medusajs/framework';
+import { validateAndTransformQuery } from '@medusajs/framework';
+import { StoreSearchProductsParams } from './validators';
+import { listProductQueryConfig } from './query-config';
+
+export const storeSearchRoutesMiddlewares: MiddlewareRoute[] = [
+  {
+    method: ['GET'],
+    matcher: '/store/search',
+    middlewares: [validateAndTransformQuery(StoreSearchProductsParams, listProductQueryConfig)]
+  }
+];
+</file>
+
+<file path="src/api/store/search/query-config.ts">
+export const defaultStoreSearchProductFields = [
+  'id',
+  'title',
+  'handle',
+  'thumbnail',
+  'created_at',
+  'updated_at'
+];
+
+export const listProductQueryConfig = {
+  isList: true,
+  defaults: defaultStoreSearchProductFields,
+  defaultLimit: 50
+};
+</file>
+
+<file path="src/api/store/search/route.ts">
+import { MedusaRequest, MedusaResponse } from '@medusajs/framework/http';
+import { StoreSearchProductsParamsType } from './validators';
+import { Knex } from '@mikro-orm/knex';
+
+export const GET = async (
+  req: MedusaRequest<StoreSearchProductsParamsType>,
+  res: MedusaResponse
+) => {
+  const { limit, offset } = req.validatedQuery as StoreSearchProductsParamsType;
+  const knex = req.scope.resolve('__pg_connection__');
+
+  const engine = new SearchEngine(knex);
+
+  const products = await engine.searchProducts(
+    req.validatedQuery as StoreSearchProductsParamsType,
+    req.listConfig.select || []
+  );
+
+  res.json({
+    products: products.map(({ total_count, ...other }) => other),
+    count: Number(products[0]?.total_count ?? 0),
+    limit,
+    offset
+  });
+};
+
+class SearchEngine {
+  #connection: Knex<any, any[]>;
+  #qb: Knex.QueryBuilder;
+
+  constructor(connection: Knex<any, any[]>) {
+    this.#connection = connection;
+    this.#qb = connection.queryBuilder();
+  }
+
+  async searchProducts(params: StoreSearchProductsParamsType, select: string[]) {
+    this.buildBaseQuery(params.currency_code, select);
+    this.applyFiltering(params);
+    this.applySorting(params);
+    this.applyPagination(params);
+
+    return await this.#qb;
+  }
+
+  private applySorting({ order, q }: StoreSearchProductsParamsType) {
+    if (order === 'relevance') {
+      if (q) {
+        this.#qb.orderByRaw('ts_rank(searchable_content, plainto_tsquery(?)) DESC', [q]);
+      }
+    } else {
+      const sortingOrder = order.startsWith('-') ? 'desc' : 'asc';
+      const orderBy = order.startsWith('-') ? order.slice(1) : order;
+
+      this.#qb.orderBy(orderBy, sortingOrder);
+    }
+  }
+
+  private applyPagination({ offset, limit }: StoreSearchProductsParamsType) {
+    this.#qb.limit(limit).offset(offset);
+  }
+
+  private applyFiltering({
+    q,
+    collection_id,
+    type_id,
+    materials,
+    category_id,
+    price_from,
+    price_to
+  }: StoreSearchProductsParamsType) {
+    if (q) {
+      this.#qb.whereRaw('searchable_content @@ plainto_tsquery(?)', [q]);
+    }
+
+    if (collection_id) {
+      this.#qb.whereIn('product.collection_id', collection_id);
+    }
+
+    if (type_id) {
+      this.#qb.whereIn('product.type_id', type_id);
+    }
+
+    if (materials) {
+      this.#qb.whereIn('product.material', materials);
+    }
+
+    if (category_id) {
+      this.#qb.whereIn('id', function () {
+        this.select('product_category_product.product_id')
+          .from('product_category_product')
+          .whereIn('product_category_id', category_id);
+      });
+    }
+
+    if (price_from) {
+      this.#qb.where(
+        this.#connection.raw('COALESCE(price_data.sale_price, price_data.regular_price)'),
+        '>=',
+        price_from
+      );
+    }
+
+    if (price_to) {
+      this.#qb.andWhere('price_data.max_price', '<=', price_to);
+    }
+  }
+
+  private buildBaseQuery(currencyCode: string, select: string[]) {
+    this.#qb
+      .with('price_data', (qb) => {
+        qb.select(
+          'product_variant.product_id',
+          this.#connection.raw(
+            "MIN(CASE WHEN price_list.type = 'sale' THEN price.amount END) AS sale_price"
+          ),
+          this.#connection.raw(
+            'MIN(CASE WHEN price.price_list_id IS NULL THEN price.amount END) AS regular_price'
+          ),
+          this.#connection.raw('MAX(price.amount) AS max_price')
+        )
+          .from('product_variant')
+          .innerJoin(
+            'product_variant_price_set',
+            'product_variant_price_set.variant_id',
+            'product_variant.id'
+          )
+          .innerJoin('price_set', 'price_set.id', 'product_variant_price_set.price_set_id')
+          .innerJoin('price', function () {
+            this.on('price.price_set_id', '=', 'price_set.id').andOnIn('price.currency_code', [
+              currencyCode
+            ]);
+          })
+          .leftJoin('price_list', 'price_list.id', 'price.price_list_id')
+          .whereNull('product_variant.deleted_at')
+          .whereNull('product_variant_price_set.deleted_at')
+          .whereNull('price_set.deleted_at')
+          .whereNull('price.deleted_at')
+          .groupBy('product_variant.product_id');
+      })
+      .select(
+        ...select.map((sel) => `product.${sel}`),
+        'price_data.regular_price',
+        'price_data.sale_price',
+        this.#connection.raw(
+          'COALESCE(price_data.sale_price, price_data.regular_price) AS calculated_price'
+        ),
+        this.#connection.raw('COUNT(*) OVER() AS total_count')
+      )
+      .from('product')
+      .leftJoin('price_data', 'price_data.product_id', 'product.id')
+      .where('product.status', '=', 'published')
+      .whereNull('product.deleted_at');
+  }
+}
+</file>
+
+<file path="src/api/store/search/validators.ts">
+import { createFindParams } from '@medusajs/medusa/api/utils/validators';
+import { z } from 'zod';
+
+export const StoreSearchProductsParams = createFindParams({
+  offset: 0,
+  limit: 50
+}).merge(
+  z.object({
+    q: z.string().optional(),
+    currency_code: z.string(),
+    collection_id: z.array(z.string()).optional(),
+    category_id: z.array(z.string()).optional(),
+    type_id: z.array(z.string()).optional(),
+    materials: z.array(z.string()).optional(),
+    order: z
+      .enum(['relevance', 'calculated_price', '-calculated_price', 'created_at', '-created_at'])
+      .default('relevance'),
+    price_from: z.coerce.number().optional(),
+    price_to: z.coerce.number().optional()
+  })
+);
+
+export type StoreSearchProductsParamsType = z.infer<typeof StoreSearchProductsParams>;
+</file>
+
+<file path="src/api/middlewares.ts">
+import { defineMiddlewares } from '@medusajs/framework';
+import { storeSearchRoutesMiddlewares } from './store/search/middlewares';
+
+export default defineMiddlewares([...storeSearchRoutesMiddlewares]);
+</file>
+
+<file path="src/api/README.md">
+# Custom API Routes
+
+An API Route is a REST API endpoint.
+
+An API Route is created in a TypeScript or JavaScript file under the `/src/api` directory of your Medusa application. The file’s name must be `route.ts` or `route.js`.
+
+> Learn more about API Routes in [this documentation](https://docs.medusajs.com/learn/fundamentals/api-routes)
+
+For example, to create a `GET` API Route at `/store/hello-world`, create the file `src/api/store/hello-world/route.ts` with the following content:
+
+```ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  res.json({
+    message: "Hello world!",
+  });
+}
+```
+
+## Supported HTTP methods
+
+The file based routing supports the following HTTP methods:
+
+- GET
+- POST
+- PUT
+- PATCH
+- DELETE
+- OPTIONS
+- HEAD
+
+You can define a handler for each of these methods by exporting a function with the name of the method in the paths `route.ts` file.
+
+For example:
+
+```ts
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  // Handle GET requests
+}
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  // Handle POST requests
+}
+
+export async function PUT(req: MedusaRequest, res: MedusaResponse) {
+  // Handle PUT requests
+}
+```
+
+## Parameters
+
+To create an API route that accepts a path parameter, create a directory within the route's path whose name is of the format `[param]`.
+
+For example, if you want to define a route that takes a `productId` parameter, you can do so by creating a file called `/api/products/[productId]/route.ts`:
+
+```ts
+import type {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const { productId } = req.params;
+
+  res.json({
+    message: `You're looking for product ${productId}`
+  })
+}
+```
+
+To create an API route that accepts multiple path parameters, create within the file's path multiple directories whose names are of the format `[param]`.
+
+For example, if you want to define a route that takes both a `productId` and a `variantId` parameter, you can do so by creating a file called `/api/products/[productId]/variants/[variantId]/route.ts`.
+
+## Using the container
+
+The Medusa container is available on `req.scope`. Use it to access modules' main services and other registered resources:
+
+```ts
+import type {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+
+export const GET = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+) => {
+  const productModuleService = req.scope.resolve("product")
+
+  const [, count] = await productModuleService.listAndCount()
+
+  res.json({
+    count,
+  })
+}
+```
+
+## Middleware
+
+You can apply middleware to your routes by creating a file called `/api/middlewares.ts`. This file must export a configuration object with what middleware you want to apply to which routes.
+
+For example, if you want to apply a custom middleware function to the `/store/custom` route, you can do so by adding the following to your `/api/middlewares.ts` file:
+
+```ts
+import { defineMiddlewares } from "@medusajs/framework/http"
+import type {
+  MedusaRequest,
+  MedusaResponse,
+  MedusaNextFunction,
+} from "@medusajs/framework/http";
+
+async function logger(
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) {
+  console.log("Request received");
+  next();
+}
+
+export default defineMiddlewares({
+  routes: [
+    {
+      matcher: "/store/custom",
+      middlewares: [logger],
+    },
+  ],
+})
+```
+
+The `matcher` property can be either a string or a regular expression. The `middlewares` property accepts an array of middleware functions.
+</file>
+
+<file path="src/jobs/README.md">
+# Custom scheduled jobs
+
+A scheduled job is a function executed at a specified interval of time in the background of your Medusa application.
+
+> Learn more about scheduled jobs in [this documentation](https://docs.medusajs.com/learn/fundamentals/scheduled-jobs).
+
+A scheduled job is created in a TypeScript or JavaScript file under the `src/jobs` directory.
+
+For example, create the file `src/jobs/hello-world.ts` with the following content:
+
+```ts
+import {
+  MedusaContainer
+} from "@medusajs/framework/types";
+
+export default async function myCustomJob(container: MedusaContainer) {
+  const productService = container.resolve("product")
+
+  const products = await productService.listAndCountProducts();
+
+  // Do something with the products
+}
+
+export const config = {
+  name: "daily-product-report",
+  schedule: "0 0 * * *", // Every day at midnight
+};
+```
+
+A scheduled job file must export:
+
+- The function to be executed whenever it’s time to run the scheduled job.
+- A configuration object defining the job. It has three properties:
+  - `name`: a unique name for the job.
+  - `schedule`: a [cron expression](https://crontab.guru/).
+  - `numberOfExecutions`: an optional integer, specifying how many times the job will execute before being removed
+
+The `handler` is a function that accepts one parameter, `container`, which is a `MedusaContainer` instance used to resolve services.
+</file>
+
+<file path="src/links/README.md">
+# Module Links
+
+A module link forms an association between two data models of different modules, while maintaining module isolation.
+
+> Learn more about links in [this documentation](https://docs.medusajs.com/learn/fundamentals/module-links)
+
+For example:
+
+```ts
+import BlogModule from "../modules/blog"
+import ProductModule from "@medusajs/medusa/product"
+import { defineLink } from "@medusajs/framework/utils"
+
+export default defineLink(
+  ProductModule.linkable.product,
+  BlogModule.linkable.post
+)
+```
+
+This defines a link between the Product Module's `product` data model and the Blog Module (custom module)'s `post` data model.
+
+Then, in the Medusa application, run the following command to sync the links to the database:
+
+```bash
+npx medusa db:migrate
+```
+</file>
+
+<file path="src/modules/meilisearch/index.ts">
+import { Module } from '@medusajs/utils';
+import Loader from './loader';
+import { MeiliSearchService } from './service';
+
+export default Module('meilisearchService', {
+  service: MeiliSearchService,
+  loaders: [Loader],
+});
+</file>
+
+<file path="src/modules/meilisearch/loader.ts">
+import { LoaderOptions } from '@medusajs/types';
+import { MeiliSearchService } from './service';
+import { MeiliSearchPluginOptions } from './types';
+import { asValue } from 'awilix';
+
+export default async ({
+  container,
+  options,
+}: LoaderOptions<MeiliSearchPluginOptions>): Promise<void> => {
+  if (!options) {
+    throw new Error('Missing meilisearch configuration');
+  }
+
+  const meilisearchService: MeiliSearchService = new MeiliSearchService(
+    container,
+    options,
+  );
+
+  container.register({
+    meilisearchService: asValue(meilisearchService),
+  });
+
+  if (options.settings) {
+    await Promise.all(
+      Object.entries(options.settings).map(([indexName, indexSettings]) =>
+        meilisearchService.updateSettings(indexName, indexSettings),
+      ),
+    );
+  }
+};
+</file>
+
+<file path="src/modules/meilisearch/service.ts">
+import { SearchTypes } from '@medusajs/types';
+import { SearchUtils } from '@medusajs/utils';
+// @ts-ignore
+import { MeiliSearch, MeiliSearchApiError, Settings } from 'meilisearch';
+import { MeiliSearchPluginOptions } from './types';
+import { logger } from '@medusajs/framework';
+
+export class MeiliSearchService extends SearchUtils.AbstractSearchService {
+  static identifier = 'meilisearch';
+
+  isDefault = false;
+
+  protected readonly client: MeiliSearch;
+
+  constructor(container: any, options: MeiliSearchPluginOptions) {
+    super(container, options);
+
+    if (process.env.NODE_ENV !== 'development') {
+      if (!options.config?.apiKey) {
+        throw Error(
+          'MeiliSearch API key is required for production environments.',
+        );
+      }
+    }
+
+    if (!options.config?.host) {
+      throw Error(
+        'MeiliSearch host is required. Please provide a host in the configuration.',
+      );
+    }
+
+    this.client = new MeiliSearch(options.config);
+  }
+
+  async createIndex(
+    indexName: string,
+    options: Record<string, unknown> = { primaryKey: 'id' },
+  ) {
+    return this.client.createIndex(indexName, options);
+  }
+
+  getIndex(indexName: string) {
+    return this.client.index(indexName);
+  }
+
+  async addDocuments(
+    indexName: string,
+    documents: Record<string, any>[],
+    type: string,
+  ) {
+    const indexSetting = this.options.settings?.[indexName];
+    const transformer = indexSetting?.transformer ?? ((doc: any) => doc);
+    const primaryKey = indexSetting?.primaryKey ?? 'id';
+
+    return this.client
+      .index(indexName)
+      .addDocuments(documents.map(transformer), { primaryKey });
+  }
+
+  async replaceDocuments(
+    indexName: string,
+    documents: Record<string, any>[],
+    type: string,
+  ) {
+    return this.addDocuments(indexName, documents, type);
+  }
+
+  async deleteDocument(indexName: string, documentId: string) {
+    return this.client.index(indexName).deleteDocument(documentId);
+  }
+
+  async deleteAllDocuments(indexName: string) {
+    return this.client.index(indexName).deleteAllDocuments();
+  }
+
+  async search(indexName: string, query: string, options: Record<string, any>) {
+    const { paginationOptions, filter, additionalOptions } = options;
+
+    return this.client
+      .index(indexName)
+      .search(query, { filter, ...paginationOptions, ...additionalOptions });
+  }
+
+  async updateSettings(
+    indexName: string,
+    settings: SearchTypes.IndexSettings & { indexSettings: Settings },
+  ) {
+    const indexSettings = settings.indexSettings ?? {};
+
+    try {
+      await this.client.getIndex(indexName);
+    } catch (error) {
+      if (
+        error instanceof MeiliSearchApiError &&
+        error.cause?.code === 'index_not_found'
+      ) {
+        await this.createIndex(indexName, {
+          primaryKey: settings.primaryKey ?? 'id',
+        });
+      } else {
+        logger.error(error);
+        throw error;
+      }
+    }
+
+    return this.client.index(indexName).updateSettings(indexSettings);
+  }
+}
+</file>
+
+<file path="src/modules/meilisearch/types.ts">
+import { SearchTypes } from '@medusajs/types';
+// @ts-ignore
+import type { Config, Settings } from 'meilisearch';
+
+export interface MeiliSearchPluginOptions {
+  /**
+   * MeiliSearch client configuration
+   */
+  config: Config;
+
+  /**
+   * MeiliSearch index settings
+   */
+  settings?: Record<
+    string,
+    SearchTypes.IndexSettings & { indexSettings: Settings }
+  >;
+}
+</file>
+
+<file path="src/modules/README.md">
+# Custom Module
+
+A module is a package of reusable functionalities. It can be integrated into your Medusa application without affecting the overall system. You can create a module as part of a plugin.
+
+> Learn more about modules in [this documentation](https://docs.medusajs.com/learn/fundamentals/modules).
+
+To create a module:
+
+## 1. Create a Data Model
+
+A data model represents a table in the database. You create a data model in a TypeScript or JavaScript file under the `models` directory of a module.
+
+For example, create the file `src/modules/blog/models/post.ts` with the following content:
+
+```ts
+import { model } from "@medusajs/framework/utils"
+
+const Post = model.define("post", {
+  id: model.id().primaryKey(),
+  title: model.text(),
+})
+
+export default Post
+```
+
+## 2. Create a Service
+
+A module must define a service. A service is a TypeScript or JavaScript class holding methods related to a business logic or commerce functionality.
+
+For example, create the file `src/modules/blog/service.ts` with the following content:
+
+```ts
+import { MedusaService } from "@medusajs/framework/utils"
+import Post from "./models/post"
+
+class BlogModuleService extends MedusaService({
+  Post,
+}){
+}
+
+export default BlogModuleService
+```
+
+## 3. Export Module Definition
+
+A module must have an `index.ts` file in its root directory that exports its definition. The definition specifies the main service of the module.
+
+For example, create the file `src/modules/blog/index.ts` with the following content:
+
+```ts
+import BlogModuleService from "./service"
+import { Module } from "@medusajs/framework/utils"
+
+export const BLOG_MODULE = "blog"
+
+export default Module(BLOG_MODULE, {
+  service: BlogModuleService,
+})
+```
+
+## 4. Add Module to Medusa's Configurations
+
+To start using the module, add it to `medusa-config.ts`:
+
+```ts
+module.exports = defineConfig({
+  projectConfig: {
+    // ...
+  },
+  modules: [
+    {
+      resolve: "./src/modules/blog",
+    },
+  ],
+})
+```
+
+## 5. Generate and Run Migrations
+
+To generate migrations for your module, run the following command:
+
+```bash
+npx medusa db:generate blog
+```
+
+Then, to run migrations, run the following command:
+
+```bash
+npx medusa db:migrate
+```
+
+## Use Module
+
+You can use the module in customizations within the Medusa application, such as workflows and API routes.
+
+For example, to use the module in an API route:
+
+```ts
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework"
+import BlogModuleService from "../../../modules/blog/service"
+import { BLOG_MODULE } from "../../../modules/blog"
+
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> {
+  const blogModuleService: BlogModuleService = req.scope.resolve(
+    BLOG_MODULE
+  )
+
+  const posts = await blogModuleService.listPosts()
+
+  res.json({
+    posts
+  })
+}
+```
+</file>
+
+<file path="src/scripts/enable-search-engine.ts">
+import { ExecArgs } from '@medusajs/framework/types';
+
+export default async function enableSearchEngine({ container }: ExecArgs) {
+  const knex = container.resolve('__pg_connection__');
+  const logger = container.resolve('logger');
+
+  /* Adding vector search column and index to product */
+  await knex.raw(`
+    ALTER TABLE product
+    ADD COLUMN searchable_content tsvector;
+
+    CREATE OR REPLACE FUNCTION update_searchable_content() RETURNS trigger AS $$
+    BEGIN
+      NEW.searchable_content :=
+        setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
+        setweight(to_tsvector('english', coalesce(NEW.description, '')), 'B') ||
+        setweight(to_tsvector('english', coalesce(NEW.material, '')), 'C') ||
+        setweight(to_tsvector('english', coalesce(
+          (SELECT string_agg(variant.title || ' ' || variant.sku, ' ')
+           FROM product_variant variant
+           WHERE variant.product_id = NEW.id), '')), 'D') ||
+        setweight(to_tsvector('english', coalesce(
+          (SELECT collection.title
+           FROM product_collection collection
+           WHERE collection.id = NEW.collection_id), '')), 'D') ||
+        setweight(to_tsvector('english', coalesce(
+          (SELECT product_type.value
+           FROM product_type
+           WHERE product_type.id = NEW.type_id), '')), 'D');
+
+      RETURN NEW;
+    END
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER update_searchable_content_trigger
+    BEFORE INSERT OR UPDATE ON product
+    FOR EACH ROW
+    EXECUTE FUNCTION update_searchable_content();
+
+    CREATE INDEX product_searchable_content_idx
+    ON product
+    USING GIN (searchable_content);
+  `);
+
+  logger.info('Search engine functionality has been successfully enabled.');
+}
+</file>
+
+<file path="src/scripts/index-products.ts">
+import { ExecArgs, ISearchService } from '@medusajs/framework/types';
+import { Modules } from '@medusajs/framework/utils';
+
+export default async function indexProducts({ container }: ExecArgs) {
+  const logger = container.resolve('logger');
+
+  const meilisearchService = container.resolve(
+    'meilisearchService',
+  ) as ISearchService;
+
+  const productModuleService = container.resolve(Modules.PRODUCT);
+
+  const [products, count] = await productModuleService.listAndCountProducts(
+    undefined,
+    {
+      relations: [
+        'variants',
+        'options',
+        'tags',
+        'collection',
+        'type',
+        'images',
+      ],
+    },
+  );
+
+  logger.info(`Adding ${count} products to MeiliSearch...`);
+
+  await meilisearchService.addDocuments('products', products, 'products');
+
+  logger.info('Products added to MeiliSearch');
+}
+</file>
+
+<file path="src/scripts/medusa-config.ts">
+import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils';
+
+loadEnv(process.env.NODE_ENV || 'development', process.cwd());
+
+const dynamicModules = {};
+
+const stripeApiKey = process.env.STRIPE_API_KEY;
+const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+const isStripeConfigured = Boolean(stripeApiKey) && Boolean(stripeWebhookSecret);
+
+if (isStripeConfigured) {
+  console.log('Stripe API key and webhook secret found. Enabling payment module');
+  dynamicModules[Modules.PAYMENT] = {
+    resolve: '@medusajs/medusa/payment',
+    options: {
+      providers: [
+        {
+          resolve: '@medusajs/medusa/payment-stripe',
+          id: 'stripe',
+          options: {
+            apiKey: stripeApiKey,
+            webhookSecret: stripeWebhookSecret
+          }
+        }
+      ]
+    }
+  };
+}
+
+const modules = {
+  [Modules.FILE]: {
+    resolve: '@medusajs/medusa/file',
+    options: {
+      providers: [
+        {
+          resolve: '@medusajs/file-s3',
+          id: 's3',
+          options: {
+            file_url: process.env.DO_SPACE_URL,
+            access_key_id: process.env.DO_SPACE_ACCESS_KEY,
+            secret_access_key: process.env.DO_SPACE_SECRET_KEY,
+            region: process.env.DO_SPACE_REGION,
+            bucket: process.env.DO_SPACE_BUCKET,
+            endpoint: process.env.DO_SPACE_ENDPOINT
+          }
+        }
+      ]
+    }
+  },
+  [Modules.NOTIFICATION]: {
+    resolve: '@medusajs/medusa/notification',
+    options: {
+      providers: [
+        {
+          resolve: './src/modules/resend-notification',
+          id: 'resend-notification',
+          options: {
+            channels: ['email'],
+            apiKey: process.env.RESEND_API_KEY,
+            fromEmail: process.env.RESEND_FROM_EMAIL,
+            replyToEmail: process.env.RESEND_REPLY_TO_EMAIL,
+            toEmail: process.env.TO_EMAIL,
+            enableEmails: process.env.ENABLE_EMAIL_NOTIFICATIONS
+          }
+        }
+      ]
+    }
+  },
+  [Modules.WORKFLOW_ENGINE]: {
+    resolve: '@medusajs/medusa/workflow-engine',
+    options: {
+      providers: [
+        {
+          options:{ 
+            clientUrl: 'skdflksd'
+          }
+        }
+      ]
+    }
+  }
+};
+
+
+
+module.exports = defineConfig({
+  admin: {
+    backendUrl: process.env.MEDUSA_BACKEND_URL,
+    disable: process.env.DISABLE_MEDUSA_ADMIN === 'true'
+  },
+  projectConfig: {
+    databaseUrl: process.env.DATABASE_URL,
+    http: {
+      storeCors: process.env.STORE_CORS,
+      adminCors: process.env.ADMIN_CORS,
+      authCors: process.env.AUTH_CORS,
+      jwtSecret: process.env.JWT_SECRET || 'supersecret',
+      cookieSecret: process.env.COOKIE_SECRET || 'supersecret'
+    }
+  },
+  modules: {
+    ...dynamicModules,
+    ...modules
+  }
+});
+</file>
+
+<file path="src/scripts/README.md">
+# Custom CLI Script
+
+A custom CLI script is a function to execute through Medusa's CLI tool. This is useful when creating custom Medusa tooling to run as a CLI tool.
+
+> Learn more about custom CLI scripts in [this documentation](https://docs.medusajs.com/learn/fundamentals/custom-cli-scripts).
+
+## How to Create a Custom CLI Script?
+
+To create a custom CLI script, create a TypeScript or JavaScript file under the `src/scripts` directory. The file must default export a function.
+
+For example, create the file `src/scripts/my-script.ts` with the following content:
+
+```ts title="src/scripts/my-script.ts"
+import { 
+  ExecArgs,
+} from "@medusajs/framework/types"
+
+export default async function myScript ({
+  container
+}: ExecArgs) {
+  const productModuleService = container.resolve("product")
+
+  const [, count] = await productModuleService.listAndCountProducts()
+
+  console.log(`You have ${count} product(s)`)
+}
+```
+
+The function receives as a parameter an object having a `container` property, which is an instance of the Medusa Container. Use it to resolve resources in your Medusa application.
+
+---
+
+## How to Run Custom CLI Script?
+
+To run the custom CLI script, run the `exec` command:
+
+```bash
+npx medusa exec ./src/scripts/my-script.ts
+```
+
+---
+
+## Custom CLI Script Arguments
+
+Your script can accept arguments from the command line. Arguments are passed to the function's object parameter in the `args` property.
+
+For example:
+
+```ts
+import { ExecArgs } from "@medusajs/framework/types"
+
+export default async function myScript ({
+  args
+}: ExecArgs) {
+  console.log(`The arguments you passed: ${args}`)
+}
+```
+
+Then, pass the arguments in the `exec` command after the file path:
+
+```bash
+npx medusa exec ./src/scripts/my-script.ts arg1 arg2
+```
+</file>
+
+<file path="src/scripts/seed.ts">
+import {
+  createApiKeysWorkflow,
+  createInventoryLevelsWorkflow,
+  createProductCategoriesWorkflow,
+  createProductsWorkflow,
+  createRegionsWorkflow,
+  createSalesChannelsWorkflow,
+  createShippingOptionsWorkflow,
+  createShippingProfilesWorkflow,
+  createStockLocationsWorkflow,
+  createTaxRegionsWorkflow,
+  linkSalesChannelsToApiKeyWorkflow,
+  linkSalesChannelsToStockLocationWorkflow,
+  updateStoresWorkflow,
+} from "@medusajs/medusa/core-flows";
+import { CreateInventoryLevelInput, ExecArgs } from "@medusajs/framework/types";
+import {
+  ContainerRegistrationKeys,
+  Modules,
+  ProductStatus,
+} from "@medusajs/framework/utils";
+
+export default async function seedDemoData({ container }: ExecArgs) {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
+  const link = container.resolve(ContainerRegistrationKeys.LINK);
+  const query = container.resolve(ContainerRegistrationKeys.QUERY);
+  const fulfillmentModuleService = container.resolve(Modules.FULFILLMENT);
+  const salesChannelModuleService = container.resolve(Modules.SALES_CHANNEL);
+  const storeModuleService = container.resolve(Modules.STORE);
+
+  const countries = ["gb", "de", "dk", "se", "fr", "es", "it"];
+
+  logger.info("Seeding store data...");
+  const [store] = await storeModuleService.listStores();
+  let defaultSalesChannel = await salesChannelModuleService.listSalesChannels({
+    name: "Default Sales Channel",
+  });
+
+  if (!defaultSalesChannel.length) {
+    // create the default sales channel
+    const { result: salesChannelResult } = await createSalesChannelsWorkflow(
+      container
+    ).run({
+      input: {
+        salesChannelsData: [
+          {
+            name: "Default Sales Channel",
+          },
+        ],
+      },
+    });
+    defaultSalesChannel = salesChannelResult;
+  }
+
+  await updateStoresWorkflow(container).run({
+    input: {
+      selector: { id: store.id },
+      update: {
+        supported_currencies: [
+          {
+            currency_code: "eur",
+            is_default: true,
+          },
+          {
+            currency_code: "usd",
+          },
+        ],
+        default_sales_channel_id: defaultSalesChannel[0].id,
+      },
+    },
+  });
+  logger.info("Seeding region data...");
+  const { result: regionResult } = await createRegionsWorkflow(container).run({
+    input: {
+      regions: [
+        {
+          name: "Europe",
+          currency_code: "eur",
+          countries,
+          payment_providers: ["pp_system_default"],
+        },
+      ],
+    },
+  });
+  const region = regionResult[0];
+  logger.info("Finished seeding regions.");
+
+  logger.info("Seeding tax regions...");
+  await createTaxRegionsWorkflow(container).run({
+    input: countries.map((country_code) => ({
+      country_code,
+    })),
+  });
+  logger.info("Finished seeding tax regions.");
+
+  logger.info("Seeding stock location data...");
+  const { result: stockLocationResult } = await createStockLocationsWorkflow(
+    container
+  ).run({
+    input: {
+      locations: [
+        {
+          name: "European Warehouse",
+          address: {
+            city: "Copenhagen",
+            country_code: "DK",
+            address_1: "",
+          },
+        },
+      ],
+    },
+  });
+  const stockLocation = stockLocationResult[0];
+
+  await link.create({
+    [Modules.STOCK_LOCATION]: {
+      stock_location_id: stockLocation.id,
+    },
+    [Modules.FULFILLMENT]: {
+      fulfillment_provider_id: "manual_manual",
+    },
+  });
+
+  logger.info("Seeding fulfillment data...");
+  const shippingProfiles = await fulfillmentModuleService.listShippingProfiles({
+    type: "default"
+  })
+  let shippingProfile = shippingProfiles.length ? shippingProfiles[0] : null
+
+  if (!shippingProfile) {
+    const { result: shippingProfileResult } =
+    await createShippingProfilesWorkflow(container).run({
+      input: {
+        data: [
+          {
+            name: "Default Shipping Profile",
+            type: "default",
+          },
+        ],
+      },
+    });
+    shippingProfile = shippingProfileResult[0];
+  }
+
+  const fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
+    name: "European Warehouse delivery",
+    type: "shipping",
+    service_zones: [
+      {
+        name: "Europe",
+        geo_zones: [
+          {
+            country_code: "gb",
+            type: "country",
+          },
+          {
+            country_code: "de",
+            type: "country",
+          },
+          {
+            country_code: "dk",
+            type: "country",
+          },
+          {
+            country_code: "se",
+            type: "country",
+          },
+          {
+            country_code: "fr",
+            type: "country",
+          },
+          {
+            country_code: "es",
+            type: "country",
+          },
+          {
+            country_code: "it",
+            type: "country",
+          },
+        ],
+      },
+    ],
+  });
+
+  await link.create({
+    [Modules.STOCK_LOCATION]: {
+      stock_location_id: stockLocation.id,
+    },
+    [Modules.FULFILLMENT]: {
+      fulfillment_set_id: fulfillmentSet.id,
+    },
+  });
+
+  await createShippingOptionsWorkflow(container).run({
+    input: [
+      {
+        name: "Standard Shipping",
+        price_type: "flat",
+        provider_id: "manual_manual",
+        service_zone_id: fulfillmentSet.service_zones[0].id,
+        shipping_profile_id: shippingProfile.id,
+        type: {
+          label: "Standard",
+          description: "Ship in 2-3 days.",
+          code: "standard",
+        },
+        prices: [
+          {
+            currency_code: "usd",
+            amount: 10,
+          },
+          {
+            currency_code: "eur",
+            amount: 10,
+          },
+          {
+            region_id: region.id,
+            amount: 10,
+          },
+        ],
+        rules: [
+          {
+            attribute: "enabled_in_store",
+            value: "true",
+            operator: "eq",
+          },
+          {
+            attribute: "is_return",
+            value: "false",
+            operator: "eq",
+          },
+        ],
+      },
+      {
+        name: "Express Shipping",
+        price_type: "flat",
+        provider_id: "manual_manual",
+        service_zone_id: fulfillmentSet.service_zones[0].id,
+        shipping_profile_id: shippingProfile.id,
+        type: {
+          label: "Express",
+          description: "Ship in 24 hours.",
+          code: "express",
+        },
+        prices: [
+          {
+            currency_code: "usd",
+            amount: 10,
+          },
+          {
+            currency_code: "eur",
+            amount: 10,
+          },
+          {
+            region_id: region.id,
+            amount: 10,
+          },
+        ],
+        rules: [
+          {
+            attribute: "enabled_in_store",
+            value: "true",
+            operator: "eq",
+          },
+          {
+            attribute: "is_return",
+            value: "false",
+            operator: "eq",
+          },
+        ],
+      },
+    ],
+  });
+  logger.info("Finished seeding fulfillment data.");
+
+  await linkSalesChannelsToStockLocationWorkflow(container).run({
+    input: {
+      id: stockLocation.id,
+      add: [defaultSalesChannel[0].id],
+    },
+  });
+  logger.info("Finished seeding stock location data.");
+
+  logger.info("Seeding publishable API key data...");
+  const { result: publishableApiKeyResult } = await createApiKeysWorkflow(
+    container
+  ).run({
+    input: {
+      api_keys: [
+        {
+          title: "Webshop",
+          type: "publishable",
+          created_by: "",
+        },
+      ],
+    },
+  });
+  const publishableApiKey = publishableApiKeyResult[0];
+
+  await linkSalesChannelsToApiKeyWorkflow(container).run({
+    input: {
+      id: publishableApiKey.id,
+      add: [defaultSalesChannel[0].id],
+    },
+  });
+  logger.info("Finished seeding publishable API key data.");
+
+  logger.info("Seeding product data...");
+
+  const { result: categoryResult } = await createProductCategoriesWorkflow(
+    container
+  ).run({
+    input: {
+      product_categories: [
+        {
+          name: "Shirts",
+          is_active: true,
+        },
+        {
+          name: "Sweatshirts",
+          is_active: true,
+        },
+        {
+          name: "Pants",
+          is_active: true,
+        },
+        {
+          name: "Merch",
+          is_active: true,
+        },
+      ],
+    },
+  });
+
+  await createProductsWorkflow(container).run({
+    input: {
+      products: [
+        {
+          title: "Medusa T-Shirt",
+          category_ids: [
+            categoryResult.find((cat) => cat.name === "Shirts")!.id,
+          ],
+          description:
+            "Reimagine the feeling of a classic T-shirt. With our cotton T-shirts, everyday essentials no longer have to be ordinary.",
+          handle: "t-shirt",
+          weight: 400,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-black-front.png",
+            },
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-black-back.png",
+            },
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-white-front.png",
+            },
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-white-back.png",
+            },
+          ],
+          options: [
+            {
+              title: "Size",
+              values: ["S", "M", "L", "XL"],
+            },
+            {
+              title: "Color",
+              values: ["Black", "White"],
+            },
+          ],
+          variants: [
+            {
+              title: "S / Black",
+              sku: "SHIRT-S-BLACK",
+              options: {
+                Size: "S",
+                Color: "Black",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "S / White",
+              sku: "SHIRT-S-WHITE",
+              options: {
+                Size: "S",
+                Color: "White",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "M / Black",
+              sku: "SHIRT-M-BLACK",
+              options: {
+                Size: "M",
+                Color: "Black",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "M / White",
+              sku: "SHIRT-M-WHITE",
+              options: {
+                Size: "M",
+                Color: "White",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "L / Black",
+              sku: "SHIRT-L-BLACK",
+              options: {
+                Size: "L",
+                Color: "Black",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "L / White",
+              sku: "SHIRT-L-WHITE",
+              options: {
+                Size: "L",
+                Color: "White",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "XL / Black",
+              sku: "SHIRT-XL-BLACK",
+              options: {
+                Size: "XL",
+                Color: "Black",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "XL / White",
+              sku: "SHIRT-XL-WHITE",
+              options: {
+                Size: "XL",
+                Color: "White",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel[0].id,
+            },
+          ],
+        },
+        {
+          title: "Medusa Sweatshirt",
+          category_ids: [
+            categoryResult.find((cat) => cat.name === "Sweatshirts")!.id,
+          ],
+          description:
+            "Reimagine the feeling of a classic sweatshirt. With our cotton sweatshirt, everyday essentials no longer have to be ordinary.",
+          handle: "sweatshirt",
+          weight: 400,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatshirt-vintage-front.png",
+            },
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatshirt-vintage-back.png",
+            },
+          ],
+          options: [
+            {
+              title: "Size",
+              values: ["S", "M", "L", "XL"],
+            },
+          ],
+          variants: [
+            {
+              title: "S",
+              sku: "SWEATSHIRT-S",
+              options: {
+                Size: "S",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "M",
+              sku: "SWEATSHIRT-M",
+              options: {
+                Size: "M",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "L",
+              sku: "SWEATSHIRT-L",
+              options: {
+                Size: "L",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "XL",
+              sku: "SWEATSHIRT-XL",
+              options: {
+                Size: "XL",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel[0].id,
+            },
+          ],
+        },
+        {
+          title: "Medusa Sweatpants",
+          category_ids: [
+            categoryResult.find((cat) => cat.name === "Pants")!.id,
+          ],
+          description:
+            "Reimagine the feeling of classic sweatpants. With our cotton sweatpants, everyday essentials no longer have to be ordinary.",
+          handle: "sweatpants",
+          weight: 400,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-front.png",
+            },
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-back.png",
+            },
+          ],
+          options: [
+            {
+              title: "Size",
+              values: ["S", "M", "L", "XL"],
+            },
+          ],
+          variants: [
+            {
+              title: "S",
+              sku: "SWEATPANTS-S",
+              options: {
+                Size: "S",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "M",
+              sku: "SWEATPANTS-M",
+              options: {
+                Size: "M",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "L",
+              sku: "SWEATPANTS-L",
+              options: {
+                Size: "L",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "XL",
+              sku: "SWEATPANTS-XL",
+              options: {
+                Size: "XL",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel[0].id,
+            },
+          ],
+        },
+        {
+          title: "Medusa Shorts",
+          category_ids: [
+            categoryResult.find((cat) => cat.name === "Merch")!.id,
+          ],
+          description:
+            "Reimagine the feeling of classic shorts. With our cotton shorts, everyday essentials no longer have to be ordinary.",
+          handle: "shorts",
+          weight: 400,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          images: [
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/shorts-vintage-front.png",
+            },
+            {
+              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/shorts-vintage-back.png",
+            },
+          ],
+          options: [
+            {
+              title: "Size",
+              values: ["S", "M", "L", "XL"],
+            },
+          ],
+          variants: [
+            {
+              title: "S",
+              sku: "SHORTS-S",
+              options: {
+                Size: "S",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "M",
+              sku: "SHORTS-M",
+              options: {
+                Size: "M",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "L",
+              sku: "SHORTS-L",
+              options: {
+                Size: "L",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+            {
+              title: "XL",
+              sku: "SHORTS-XL",
+              options: {
+                Size: "XL",
+              },
+              prices: [
+                {
+                  amount: 10,
+                  currency_code: "eur",
+                },
+                {
+                  amount: 15,
+                  currency_code: "usd",
+                },
+              ],
+            },
+          ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel[0].id,
+            },
+          ],
+        },
+      ],
+    },
+  });
+  logger.info("Finished seeding product data.");
+
+  logger.info("Seeding inventory levels.");
+
+  const { data: inventoryItems } = await query.graph({
+    entity: "inventory_item",
+    fields: ["id"],
+  });
+
+  const inventoryLevels: CreateInventoryLevelInput[] = [];
+  for (const inventoryItem of inventoryItems) {
+    const inventoryLevel = {
+      location_id: stockLocation.id,
+      stocked_quantity: 1000000,
+      inventory_item_id: inventoryItem.id,
+    };
+    inventoryLevels.push(inventoryLevel);
+  }
+
+  await createInventoryLevelsWorkflow(container).run({
+    input: {
+      inventory_levels: inventoryLevels,
+    },
+  });
+
+  logger.info("Finished seeding inventory levels data.");
+}
+</file>
+
+<file path="src/subscribers/categories-created.ts">
+import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { Modules } from "@medusajs/framework/utils"
+import type { IProductModuleService } from "@medusajs/types"
+
+export default async function categoryCreateHandler({
+  container,
+  event,
+}: SubscriberArgs<{ id: string }>) {
+  const productModuleService = container.resolve<IProductModuleService>(Modules.PRODUCT)
+
+  const categoryId = event.data.id
+  const category = await productModuleService.retrieveProductCategory(categoryId)
+
+  const metadata = category.metadata || {}
+
+  const updates: Record<string, string> = {}
+
+  // Only auto-generate Arabic fields if not already generated
+  const alreadyGenerated = metadata.auto_generated === true
+
+  if (!alreadyGenerated) {
+    if (!metadata.name_ar && category.name) {
+      updates.name_ar = `ترجمة: ${category.name}`
+    }
+
+    if (!metadata.description_ar && category.description) {
+      updates.description_ar = `وصف: ${category.description}`
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updates.auto_generated = "true" // mark that these are auto-generated
+
+      await productModuleService.updateProductCategories(
+        categoryId,
+        {
+          metadata: {
+            ...metadata,
+            ...updates,
+          },
+        }
+      )
+      console.log(`Category ${categoryId} auto-filled Arabic metadata on create:`, updates)
+    }
+  } else {
+    console.log(`Category ${categoryId} already has auto-generated Arabic metadata. Skipping.`)
+  }
+}
+
+export const config: SubscriberConfig = {
+  event: "product-category.created",
+}
+</file>
+
+<file path="src/subscribers/categories-updated.ts">
+import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { Modules } from "@medusajs/framework/utils"
+import type { IProductModuleService } from "@medusajs/types"
+
+export default async function categoryUpdateHandler({
+  container,
+  event,
+}: SubscriberArgs<{ id: string }>) {
+  const productModuleService = container.resolve<IProductModuleService>(Modules.PRODUCT)
+
+  const categoryId = event.data.id
+  console.log(`Updating category with ID: ${categoryId}`)
+
+  const category = await productModuleService.retrieveProductCategory(categoryId)
+  const metadata = category.metadata || {}
+
+  const updates: Record<string, string> = {}
+
+  // Only auto-generate Arabic fields if they are not present
+  // and we haven't auto-generated them before
+  const alreadyGenerated = metadata.auto_generated === true
+
+  if (!alreadyGenerated) {
+    if (!metadata.title_ar && category.name) {
+      updates.title_ar = `ترجمة: ${category.name}`
+    }
+
+    if (!metadata.description_ar && category.description) {
+      updates.description_ar = `وصف: ${category.description}`
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updates.auto_generated = "true" // mark that this was auto-set
+      await productModuleService.updateProductCategories(categoryId, {
+        metadata: {
+          ...metadata,
+          ...updates,
+        },
+      })
+
+      console.log(`Category ${categoryId} auto-filled Arabic metadata:`, updates)
+    }
+  } else {
+    console.log(`Category ${categoryId} already has generated Arabic metadata. Skipping.`)
+  }
+}
+
+export const config: SubscriberConfig = {
+  event: "product-category.updated",
+}
+</file>
+
+<file path="src/subscribers/collection-created.ts">
+import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { Modules } from "@medusajs/framework/utils"
+import type { IProductModuleService } from "@medusajs/types"
+
+export default async function collectionCreateHandler({
+  container,
+  event,
+}: SubscriberArgs<{ id: string }>) {
+  const productModuleService = container.resolve<IProductModuleService>(Modules.PRODUCT)
+
+  const collectionId = event.data.id
+  const collection = await productModuleService.retrieveProductCollection(collectionId)
+
+  console.log(`The collection ${collection.id} was created`)
+
+  const metadata = collection.metadata || {}
+
+  const updates: Record<string, string | boolean> = {}
+
+  // Only auto-generate if not already done
+  const alreadyGenerated = metadata.auto_generated === true
+
+  if (!alreadyGenerated) {
+    if (!metadata.title_ar && collection.title) {
+      updates.title_ar = `ترجمة: ${collection.title}`
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updates.auto_generated = true
+
+      await productModuleService.updateProductCollections(
+        collectionId,
+        {
+          metadata: {
+            ...metadata,
+            ...updates,
+          },
+        }
+      )
+
+      console.log(`Collection ${collectionId} auto-filled Arabic metadata:`, updates)
+    }
+  } else {
+    console.log(`Collection ${collectionId} already has auto-generated Arabic metadata. Skipping update.`)
+  }
+}
+
+export const config: SubscriberConfig = {
+  event: "product-collection.created",
+}
+</file>
+
+<file path="src/subscribers/collection-updated.ts">
+import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { Modules } from "@medusajs/framework/utils"
+import type { IProductModuleService } from "@medusajs/types"
+
+export default async function collectionCreateHandler({
+  container,
+  event,
+}: SubscriberArgs<{ id: string }>) {
+  const productModuleService = container.resolve<IProductModuleService>(Modules.PRODUCT)
+
+  const collectionId = event.data.id
+  const collection = await productModuleService.retrieveProductCollection(collectionId)
+
+  console.log(`The collection ${collection.id} was created`)
+
+  const metadata = collection.metadata || {}
+
+  const updates: Record<string, string | boolean> = {}
+
+  // Only auto-generate if not already done
+  const alreadyGenerated = metadata.auto_generated === true
+
+  if (!alreadyGenerated) {
+    if (!metadata.title_ar && collection.title) {
+      updates.title_ar = `ترجمة: ${collection.title}`
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updates.auto_generated = true
+
+      await productModuleService.updateProductCollections(
+        collectionId,
+        {
+          metadata: {
+            ...metadata,
+            ...updates,
+          },
+        }
+      )
+
+      console.log(`Collection ${collectionId} auto-filled Arabic metadata:`, updates)
+    }
+  } else {
+    console.log(`Collection ${collectionId} already has auto-generated Arabic metadata. Skipping update.`)
+  }
+}
+
+export const config: SubscriberConfig = {
+  event: "product-collection.updated",
+}
+</file>
+
+<file path="src/subscribers/index-products.ts">
+// import type { SubscriberArgs, SubscriberConfig } from '@medusajs/medusa';
+// import { Modules } from '@medusajs/framework/utils';
+// import { ISearchService } from '@medusajs/framework/types';
+
+// export default async function indexProductHandler({
+//   event: { data, name },
+//   container,
+// }: SubscriberArgs<{ id: string }>) {
+//   const productId = data.id;
+
+//   const logger = container.resolve('logger');
+//   const productModuleService = container.resolve(Modules.PRODUCT);
+//   const meilisearchService = container.resolve(
+//     'meilisearchService',
+//   ) as ISearchService;
+
+//   if (name === 'product.deleted') {
+//     await meilisearchService.deleteDocument('products', productId);
+//     logger.info(`The product ${productId} was deleted from MeiliSearch`);
+//     return;
+//   }
+
+//   const product = await productModuleService.retrieveProduct(productId, {
+//     relations: ['variants', 'options', 'tags', 'collection', 'type', 'images'],
+//   });
+
+//   if (name === 'product.updated') {
+//     await meilisearchService.replaceDocuments(
+//       'products',
+//       [product],
+//       'products',
+//     );
+//     logger.info(
+//       `The product ${productId} ${product.title} was updated in MeiliSearch`,
+//     );
+//     return;
+//   }
+
+//   await meilisearchService.addDocuments('products', [product], 'products');
+//   logger.info(
+//     `The product ${productId} ${product.title} was added to MeiliSearch`,
+//   );
+// }
+
+// export const config: SubscriberConfig = {
+//   event: ['product.created', 'product.updated', 'product.deleted'],
+// };
+</file>
+
+<file path="src/subscribers/product-created.ts">
+import type {
+    SubscriberArgs,
+    SubscriberConfig,
+  } from "@medusajs/framework"
+  import type { IProductModuleService } from "@medusajs/types"
+  import { Modules } from "@medusajs/framework/utils"
+
+  export default async function productCreateHandler({
+    container,
+    event,
+  }: SubscriberArgs<{ id: string }>) {
+    
+    const productService = container.resolve(Modules.PRODUCT)
+  
+    const productId = event.data.id
+    const product = await productService.retrieveProduct(productId)
+    console.log(`The product ${product.id} was created`)
+
+    const metadata = product.metadata || {}
+  
+    const updates: Record<string, string> = {}
+    if (!metadata.title_ar && product.title) {
+      updates.title_ar = `ترجمة: ${product.title}`
+    }
+    if (!metadata.description_ar && product.description) {
+      updates.description_ar = `وصف: ${product.description}`
+    }
+  
+    if (Object.keys(updates).length > 0) {
+      await productService.updateProducts(productId, {
+        metadata: {
+          ...metadata,
+          ...updates,
+        },
+      })
+    }
+  }
+  
+  export const config: SubscriberConfig = {
+    event: "product.created",
+  }
+</file>
+
+<file path="src/subscribers/product-updated.ts">
+import type {
+    SubscriberArgs,
+    SubscriberConfig,
+  } from "@medusajs/framework"
+import { Modules } from "@medusajs/framework/utils"
+  import type { IProductModuleService } from "@medusajs/types"
+  
+  export default async function productUpdateHandler({
+    container,
+    event,
+  }: SubscriberArgs<{ id: string }>) {
+    const productService = container.resolve(Modules.PRODUCT)
+
+    const productId = event.data.id
+    const product = await productService.retrieveProduct(productId)
+    console.log(`The product ${product.id} was updated`)
+
+    const metadata = product.metadata ?? {}
+  
+    const updates: Record<string, string> = {}
+  
+    if (!metadata.title_ar && product.title) {
+      updates.title_ar = `ترجمة: ${product.title}`
+    }
+  
+    if (!metadata.description_ar && product.description) {
+      updates.description_ar = `وصف: ${product.description}`
+    }
+  
+    if (Object.keys(updates).length > 0) {
+      await productService.updateProducts(productId, {
+        metadata: {
+          ...metadata,
+          ...updates,
+        },
+      })
+    }
+  }
+  
+  export const config: SubscriberConfig = {
+    event: "product.updated",
+  }
+</file>
+
+<file path="src/subscribers/README.md">
+# Custom subscribers
+
+Subscribers handle events emitted in the Medusa application.
+
+> Learn more about Subscribers in [this documentation](https://docs.medusajs.com/learn/fundamentals/events-and-subscribers).
+
+The subscriber is created in a TypeScript or JavaScript file under the `src/subscribers` directory.
+
+For example, create the file `src/subscribers/product-created.ts` with the following content:
+
+```ts
+import {
+  type SubscriberConfig,
+} from "@medusajs/framework"
+
+// subscriber function
+export default async function productCreateHandler() {
+  console.log("A product was created")
+}
+
+// subscriber config
+export const config: SubscriberConfig = {
+  event: "product.created",
+}
+```
+
+A subscriber file must export:
+
+- The subscriber function that is an asynchronous function executed whenever the associated event is triggered.
+- A configuration object defining the event this subscriber is listening to.
+
+## Subscriber Parameters
+
+A subscriber receives an object having the following properties:
+
+- `event`: An object holding the event's details. It has a `data` property, which is the event's data payload.
+- `container`: The Medusa container. Use it to resolve modules' main services and other registered resources.
+
+```ts
+import type {
+  SubscriberArgs,
+  SubscriberConfig,
+} from "@medusajs/framework"
+
+export default async function productCreateHandler({
+  event: { data },
+  container,
+}: SubscriberArgs<{ id: string }>) {
+  const productId = data.id
+
+  const productModuleService = container.resolve("product")
+
+  const product = await productModuleService.retrieveProduct(productId)
+
+  console.log(`The product ${product.title} was created`)
+}
+
+export const config: SubscriberConfig = {
+  event: "product.created",
+}
+```
+</file>
+
+<file path="src/subscribers/variant-created.ts">
+import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { Modules } from "@medusajs/framework/utils"
+import type { IProductModuleService } from "@medusajs/types"
+
+export default async function variantCreateHandler({
+  container,
+  event,
+}: SubscriberArgs<{ id: string }>) {
+  const productModuleService = container.resolve<IProductModuleService>(Modules.PRODUCT)
+
+  const variantId = event.data.id
+  const variant = await productModuleService.retrieveProductVariant(variantId)
+
+  const metadata = variant.metadata || {}
+
+  const updates: Record<string, string> = {}
+
+  if (!metadata.title_ar && variant.title) {
+    updates.title_ar = `ترجمة: ${variant.title}`
+  }
+
+  if (metadata.material && !metadata.material_ar) {
+    updates.material_ar = `مادة: ${metadata.material}`
+  }
+
+  if (metadata.color && !metadata.color_ar) {
+    updates.color_ar = `لون: ${metadata.color}`
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await productModuleService.updateProductVariants(variantId, {
+      metadata: {
+        ...metadata,
+        ...updates,
+      },
+    })
+  }
+}
+
+export const config: SubscriberConfig = {
+  event: "product-variant.created",
+}
+</file>
+
+<file path="src/subscribers/variant-updated.ts">
+import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { Modules } from "@medusajs/framework/utils"
+import type { IProductModuleService } from "@medusajs/types"
+
+export default async function variantUpdateHandler({
+  container,
+  event,
+}: SubscriberArgs<{ id: string }>) {
+  const productModuleService = container.resolve<IProductModuleService>(Modules.PRODUCT)
+
+  const variantId = event.data.id
+  const variant = await productModuleService.retrieveProductVariant(variantId)
+
+  const metadata = variant.metadata || {}
+
+  const updates: Record<string, string> = {}
+
+  if (!metadata.title_ar && variant.title) {
+    updates.title_ar = `ترجمة: ${variant.title}`
+  }
+
+  if (metadata.material && !metadata.material_ar) {
+    updates.material_ar = `مادة: ${metadata.material}`
+  }
+
+  if (metadata.color && !metadata.color_ar) {
+    updates.color_ar = `لون: ${metadata.color}`
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await productModuleService.updateProductVariants(variantId, {
+      metadata: {
+        ...metadata,
+        ...updates,
+      },
+    })
+  }
+}
+
+export const config: SubscriberConfig = {
+  event: "product-variant.updated",
+}
+</file>
+
+<file path="src/workflows/index-products.ts">
+import {
+  createStep,
+  createWorkflow,
+  StepResponse,
+  WorkflowResponse,
+} from '@medusajs/framework/workflows-sdk';
+import { Modules } from '@medusajs/framework/utils';
+import { ISearchService, ProductDTO } from '@medusajs/framework/types';
+
+const retrieveProductsStep = createStep(
+  {
+    name: 'retrieveProductsStep',
+  },
+  async (input: undefined, context) => {
+    const productModuleService = context.container.resolve(Modules.PRODUCT);
+
+    const products = await productModuleService.listProducts(undefined, {
+      relations: [
+        'variants',
+        'options',
+        'tags',
+        'collection',
+        'type',
+        'images',
+      ],
+    });
+
+    return new StepResponse(products);
+  },
+);
+
+const indexProductsStep = createStep(
+  {
+    name: 'indexProductsStep',
+  },
+  async (input: ProductDTO[], context) => {
+    const meilisearchService = context.container.resolve(
+      'meilisearchService',
+    ) as ISearchService;
+    const result = await meilisearchService.addDocuments(
+      'products',
+      input,
+      'products',
+    );
+    return new StepResponse(result);
+  },
+);
+
+export const indexProductsWorkflow = createWorkflow(
+  {
+    name: 'indexProducts',
+    idempotent: true,
+    retentionTime: 60 * 60 * 24 * 3, // 3 days
+    store: true,
+  },
+  () => {
+    const products = retrieveProductsStep();
+    const result = indexProductsStep(products);
+
+    return new WorkflowResponse(result);
+  },
+);
+</file>
+
+<file path="src/workflows/README.md">
+# Custom Workflows
+
+A workflow is a series of queries and actions that complete a task.
+
+The workflow is created in a TypeScript or JavaScript file under the `src/workflows` directory.
+
+> Learn more about workflows in [this documentation](https://docs.medusajs.com/learn/fundamentals/workflows).
+
+For example:
+
+```ts
+import {
+  createStep,
+  createWorkflow,
+  WorkflowResponse,
+  StepResponse,
+} from "@medusajs/framework/workflows-sdk"
+
+const step1 = createStep("step-1", async () => {
+  return new StepResponse(`Hello from step one!`)
+})
+
+type WorkflowInput = {
+  name: string
+}
+
+const step2 = createStep(
+  "step-2",
+  async ({ name }: WorkflowInput) => {
+    return new StepResponse(`Hello ${name} from step two!`)
+  }
+)
+
+type WorkflowOutput = {
+  message1: string
+  message2: string
+}
+
+const helloWorldWorkflow = createWorkflow(
+  "hello-world",
+  (input: WorkflowInput) => {
+    const greeting1 = step1()
+    const greeting2 = step2(input)
+    
+    return new WorkflowResponse({
+      message1: greeting1,
+      message2: greeting2
+    })
+  }
+)
+
+export default helloWorldWorkflow
+```
+
+## Execute Workflow
+
+You can execute the workflow from other resources, such as API routes, scheduled jobs, or subscribers.
+
+For example, to execute the workflow in an API route:
+
+```ts
+import type {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework"
+import myWorkflow from "../../../workflows/hello-world"
+
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  const { result } = await myWorkflow(req.scope)
+    .run({
+      input: {
+        name: req.query.name as string,
+      },
+    })
+
+  res.send(result)
+}
+```
+</file>
+
+<file path=".gitignore">
+/dist
+.env
+.DS_Store
+/uploads
+/node_modules
+yarn-error.log
+
+.idea
+
+coverage
+
+!src/**
+
+./tsconfig.tsbuildinfo
+package-lock.json
+medusa-db.sql
+build
+.cache
+
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+.medusa
+/static
+</file>
+
+<file path="instrumentation.ts">
+// Uncomment this file to enable instrumentation and observability using OpenTelemetry
+// Refer to the docs for installation instructions: https://docs.medusajs.com/learn/debugging-and-testing/instrumentation
+
+// import { registerOtel } from "@medusajs/medusa"
+// // If using an exporter other than Zipkin, require it here.
+// import { ZipkinExporter } from "@opentelemetry/exporter-zipkin"
+
+// // If using an exporter other than Zipkin, initialize it here.
+// const exporter = new ZipkinExporter({
+//   serviceName: 'my-medusa-project',
+// })
+
+// export function register() {
+//   registerOtel({
+//     serviceName: 'medusajs',
+//     // pass exporter
+//     exporter,
+//     instrument: {
+//       http: true,
+//       workflows: true,
+//       query: true
+//     },
+//   })
+// }
+</file>
+
+<file path="jest.config.js">
+const { loadEnv } = require("@medusajs/utils");
+loadEnv("test", process.cwd());
+
+module.exports = {
+  transform: {
+    "^.+\\.[jt]s$": [
+      "@swc/jest",
+      {
+        jsc: {
+          parser: { syntax: "typescript", decorators: true },
+        },
+      },
+    ],
+  },
+  testEnvironment: "node",
+  moduleFileExtensions: ["js", "ts", "json"],
+  modulePathIgnorePatterns: ["dist/", "<rootDir>/.medusa/"],
+  setupFiles: ["./integration-tests/setup.js"],
+};
+
+if (process.env.TEST_TYPE === "integration:http") {
+  module.exports.testMatch = ["**/integration-tests/http/*.spec.[jt]s"];
+} else if (process.env.TEST_TYPE === "integration:modules") {
+  module.exports.testMatch = ["**/src/modules/*/__tests__/**/*.[jt]s"];
+} else if (process.env.TEST_TYPE === "unit") {
+  module.exports.testMatch = ["**/src/**/__tests__/**/*.unit.spec.[jt]s"];
+}
+</file>
+
+<file path="medusa-config.ts">
+import { loadEnv, defineConfig } from '@medusajs/framework/utils'
+
+loadEnv(process.env.NODE_ENV || 'development', process.cwd())
+const plugins = [
+  // ... other plugins
+  {
+    resolve: '@rokmohar/medusa-plugin-meilisearch',
+    options: {
+      config: {
+        host: process.env.MEILISEARCH_HOST ?? '',
+        apiKey: process.env.MEILISEARCH_API_KEY ?? '',
+      },
+      settings: {
+        products: {
+          type: 'products',
+          enabled: true,
+          fields: ['id', 'title', 'description', 'handle', 'variant_sku', 'thumbnail', 'metadata'],
+          indexSettings: {
+            searchableAttributes: [
+              'title',
+              'description',
+              'variant_sku',
+              'handle',
+              'metadata',
+              'metadata.*', // This allows searching on all metadata fields
+            ],
+            displayedAttributes: [
+              'id',
+              'handle',
+              'title',
+              'description',
+              'variant_sku',
+              'thumbnail',
+              'metadata',
+            ],
+            filterableAttributes: ['id', 'handle', 'metadata', 'metadata.*'],
+          },
+          primaryKey: 'id',
+        },
+      },
+    },
+  },
+]
+module.exports = defineConfig({
+  projectConfig: {
+    databaseUrl: process.env.DATABASE_URL,
+    http: {
+      storeCors: process.env.STORE_CORS!,
+      adminCors: process.env.ADMIN_CORS!,
+      authCors: process.env.AUTH_CORS!,
+      jwtSecret: process.env.JWT_SECRET || "supersecret",
+      cookieSecret: process.env.COOKIE_SECRET || "supersecret",
+    },
+  },
+  plugins:[...plugins]
+  // modules: [
+  //  {
+  //     resolve: './src/modules/meilisearch',
+  //     /**
+  //      * @type {import('./src/modules/meilisearch/types').MeiliSearchPluginOptions}
+  //      */
+  //     options: {
+  //       config: {
+  //         host:
+  //           process.env.MEILISEARCH_HOST,
+  //          apiKey: process.env.MEILISEARCH_API_KEY || 'f91cf0081492ffa10b6919b9314357d194641f94331b41e4540d0efe499a6ddb',
+        
+  //       },
+  //       settings: {
+  //         products: {
+  //           indexSettings: {
+  //             searchableAttributes: [
+  //               'title',
+  //               'subtitle',
+  //               'description',
+  //               'collection',
+  //               'categories',
+  //               'type',
+  //               'tags',
+  //               'variants',
+  //               'sku',
+  //             ],
+  //             displayedAttributes: [
+  //               'id',
+  //               'title',
+  //               'handle',
+  //               'subtitle',
+  //               'description',
+  //               'is_giftcard',
+  //               'status',
+  //               'thumbnail',
+  //               'collection',
+  //               'collection_handle',
+  //               'categories',
+  //               'categories_handle',
+  //               'type',
+  //               'tags',
+  //               'variants',
+  //               'sku',
+  //             ],
+  //           },
+  //           primaryKey: 'id',
+  //           /**
+  //            * @param {import('@medusajs/types').ProductDTO} product
+  //            */
+  //           transformer: (product) => {
+  //             return {
+  //               id: product.id,
+  //               title: product.title,
+  //               handle: product.handle,
+  //               subtitle: product.subtitle,
+  //               description: product.description,
+  //               is_giftcard: product.is_giftcard,
+  //               status: product.status,
+  //               thumbnail: product.images?.[0]?.url ?? null,
+  //               collection: product.collection.title,
+  //               collection_handle: product.collection.handle,
+  //               categories:
+  //                 product.categories?.map((category) => category.name) ?? [],
+  //               categories_handle:
+  //                 product.categories?.map((category) => category.handle) ?? [],
+  //               type: product.type?.value,
+  //               tags: product.tags.map((tag) => tag.value),
+  //               variants: product.variants.map((variant) => variant.title),
+  //               sku: product.variants
+  //                 .filter(
+  //                   (variant) => typeof variant.sku === 'string' && variant.sku,
+  //                 )
+  //                 .map((variant) => variant.sku),
+  //             };
+  //           },
+  //         },
+  //       },
+  //     },
+  //   },
+  // ],
+  
+})
+</file>
+
+<file path="package.json">
+{
+  "name": "lacasa_store",
+  "version": "0.0.1",
+  "description": "A starter for Medusa projects.",
+  "author": "Medusa (https://medusajs.com)",
+  "license": "MIT",
+  "keywords": [
+    "sqlite",
+    "postgres",
+    "typescript",
+    "ecommerce",
+    "headless",
+    "medusa"
+  ],
+  "scripts": {
+    "build": "medusa build",
+    "seed": "medusa exec ./src/scripts/seed.ts",
+    "start": "medusa start",
+    "dev": "medusa develop",
+    "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
+    "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "2.6.1",
+    "@medusajs/cli": "2.6.1",
+    "@medusajs/framework": "2.6.1",
+    "@medusajs/medusa": "2.6.1",
+    "@mikro-orm/core": "6.4.3",
+    "@mikro-orm/knex": "6.4.3",
+    "@mikro-orm/migrations": "6.4.3",
+    "@mikro-orm/postgresql": "6.4.3",
+    "@rokmohar/medusa-plugin-meilisearch": "^1.1.4",
+    "awilix": "^8.0.1",
+    "medusa-plugin-meilisearch": "^2.0.11",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@medusajs/test-utils": "2.6.1",
+    "@mikro-orm/cli": "6.4.3",
+    "@swc/core": "1.5.7",
+    "@swc/jest": "^0.2.36",
+    "@types/jest": "^29.5.13",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.2.25",
+    "jest": "^29.7.0",
+    "prop-types": "^15.8.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "vite": "^5.2.11",
+    "yalc": "^1.0.0-pre.53"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+</file>
+
+<file path="README.md">
+<p align="center">
+  <a href="https://www.medusajs.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/59018053/229103275-b5e482bb-4601-46e6-8142-244f531cebdb.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
+    <img alt="Medusa logo" src="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
+    </picture>
+  </a>
+</p>
+<h1 align="center">
+  Medusa
+</h1>
+
+<h4 align="center">
+  <a href="https://docs.medusajs.com">Documentation</a> |
+  <a href="https://www.medusajs.com">Website</a>
+</h4>
+
+<p align="center">
+  Building blocks for digital commerce
+</p>
+<p align="center">
+  <a href="https://github.com/medusajs/medusa/blob/master/CONTRIBUTING.md">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs welcome!" />
+  </a>
+    <a href="https://www.producthunt.com/posts/medusa"><img src="https://img.shields.io/badge/Product%20Hunt-%231%20Product%20of%20the%20Day-%23DA552E" alt="Product Hunt"></a>
+  <a href="https://discord.gg/xpCwq3Kfn8">
+    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
+  </a>
+  <a href="https://twitter.com/intent/follow?screen_name=medusajs">
+    <img src="https://img.shields.io/twitter/follow/medusajs.svg?label=Follow%20@medusajs" alt="Follow @medusajs" />
+  </a>
+</p>
+
+## Compatibility
+
+This starter is compatible with versions >= 2 of `@medusajs/medusa`. 
+
+## Getting Started
+
+Visit the [Quickstart Guide](https://docs.medusajs.com/learn/installation) to set up a server.
+
+Visit the [Docs](https://docs.medusajs.com/learn/installation#get-started) to learn more about our system requirements.
+
+## What is Medusa
+
+Medusa is a set of commerce modules and tools that allow you to build rich, reliable, and performant commerce applications without reinventing core commerce logic. The modules can be customized and used to build advanced ecommerce stores, marketplaces, or any product that needs foundational commerce primitives. All modules are open-source and freely available on npm.
+
+Learn more about [Medusa’s architecture](https://docs.medusajs.com/learn/introduction/architecture) and [commerce modules](https://docs.medusajs.com/learn/fundamentals/modules/commerce-modules) in the Docs.
+
+## Community & Contributions
+
+The community and core team are available in [GitHub Discussions](https://github.com/medusajs/medusa/discussions), where you can ask for support, discuss roadmap, and share ideas.
+
+Join our [Discord server](https://discord.com/invite/medusajs) to meet other community members.
+
+## Other channels
+
+- [GitHub Issues](https://github.com/medusajs/medusa/issues)
+- [Twitter](https://twitter.com/medusajs)
+- [LinkedIn](https://www.linkedin.com/company/medusajs)
+- [Medusa Blog](https://medusajs.com/blog/)
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "esModuleInterop": true,
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "declaration": false,
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "outDir": "./.medusa/server",
+    "rootDir": "./",
+    "jsx": "react-jsx",
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "checkJs": false,
+    "strictNullChecks": true
+  },
+  "ts-node": {
+    "swc": true
+  },
+  "include": [
+    "**/*",
+    ".medusa/types/*"
+  ],
+  "exclude": [
+    "node_modules",
+    ".medusa/server",
+    ".medusa/admin",
+    ".cache"
+  ]
+}
+</file>
+
+</files>
