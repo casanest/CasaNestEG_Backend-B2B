@@ -78,13 +78,22 @@ class PaymentFlowManagerService extends TransactionBaseService {
 
   async getPaymentInstructions(providerId: string, paymentMethod: string, sessionData: any): Promise<any> {
     try {
+      this.logger_.info("Getting payment instructions", { providerId, paymentMethod })
+
       switch (providerId) {
         case "paymob":
           return this.getPayMobInstructions(paymentMethod, sessionData)
+        case "tap":
+          return this.getTapInstructions(paymentMethod, sessionData)
         case "fawry":
           return this.getFawryInstructions(paymentMethod, sessionData)
         default:
-          throw new Error(`Unsupported payment provider: ${providerId}`)
+          return {
+            provider: "Unknown",
+            method: paymentMethod,
+            title: "Payment",
+            description: "Please complete your payment",
+          }
       }
     } catch (error) {
       this.logger_.error("Error getting payment instructions", { error, providerId, paymentMethod })
@@ -150,6 +159,47 @@ class PaymentFlowManagerService extends TransactionBaseService {
 
       default:
         return baseInstructions
+    }
+  }
+
+  private getTapInstructions(paymentMethod: string, sessionData: any): any {
+    const baseInstructions = {
+      provider: "Tap",
+      method: paymentMethod,
+      security_note: "Your payment is secured by Tap's PCI DSS compliant infrastructure with 3D Secure protection",
+    }
+
+    switch (paymentMethod) {
+      case "card":
+      case "credit_card":
+      default:
+        return {
+          ...baseInstructions,
+          title: "Credit/Debit Card Payment",
+          description: "You will be redirected to Tap's secure payment page",
+          steps: [
+            "Click the payment button to proceed",
+            "You will be redirected to Tap's secure payment page",
+            "Enter your card details securely",
+            "Complete 3D Secure verification if required",
+            "You will be redirected back to our site upon completion",
+          ],
+          features: [
+            "3D Secure protection",
+            "SSL encryption",
+            "All major cards accepted (Visa, Mastercard, American Express)",
+            "Real-time processing",
+            "PCI DSS compliant",
+          ],
+          supported_cards: ["visa", "mastercard", "amex", "discover"],
+          processing_time: "Instant",
+          security_features: [
+            "256-bit SSL encryption",
+            "3D Secure authentication",
+            "Fraud detection",
+            "PCI DSS Level 1 compliance",
+          ],
+        }
     }
   }
 
