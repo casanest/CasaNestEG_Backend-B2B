@@ -37,6 +37,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const tapSecretKey = process.env.TAP_SECRET_KEY
     const tapBaseUrl = process.env.TAP_BASE_URL || "https://api.tap.company/v2"
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:8000"
+    const publishableKey = process.env.MEDUSA_PUBLISHABLE_API_KEY
 
     if (!tapSecretKey) {
       throw new MedusaError(
@@ -45,6 +46,99 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       )
     }
 
+    if (!publishableKey) {
+      throw new MedusaError(
+        MedusaError.Types.INVALID_ARGUMENT,
+        "MEDUSA_PUBLISHABLE_API_KEY environment variable is not set"
+      )
+    }
+
+    // Step 1: Create a payment session for the cart
+    logger.info(`Creating payment session for cart: ${cart_id}`)
+    
+    let paymentSessionId: string | null = null
+    
+    try {
+      // First, check if cart already has a payment session
+      const cartResponse = await fetch(`${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/store/carts/${cart_id}`, {
+        method: "GET",
+        headers: {
+          "x-publishable-api-key": publishableKey,
+          "Content-Type": "application/json",
+        }
+      })
+
+      if (!cartResponse.ok) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_ARGUMENT,
+          `Failed to fetch cart: ${cartResponse.status}`
+        )
+      }
+
+      const cart = await cartResponse.json()
+      const cartData = cart.cart || cart
+      
+      // Check if cart already has payment sessions
+      const existingPaymentSessions = cartData.payment_sessions || 
+                                     cartData.payment_collection?.payment_sessions || []
+      
+      if (existingPaymentSessions.length === 0) {
+        // Create a new payment session
+        logger.info(`No existing payment sessions found, creating new one for cart: ${cart_id}`)
+        
+        // Since Medusa doesn't have a public endpoint to create payment sessions,
+        // we'll create a payment collection and associate it with the cart
+        const paymentCollectionResponse = await fetch(`${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/store/payment-collections`, {
+          method: "POST",
+          headers: {
+            "x-publishable-api-key": publishableKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            cart_id: cart_id
+          })
+        })
+
+        if (paymentCollectionResponse.ok) {
+          const paymentCollection = await paymentCollectionResponse.json()
+          paymentSessionId = paymentCollection.payment_collection.id
+          logger.info(`Payment collection created: ${paymentSessionId}`)
+          
+          // Update cart with payment collection
+          const updateCartResponse = await fetch(`${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/store/carts/${cart_id}`, {
+            method: "POST",
+            headers: {
+              "x-publishable-api-key": publishableKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              payment_collection_id: paymentSessionId
+            })
+          })
+
+          if (!updateCartResponse.ok) {
+            logger.warn(`Failed to update cart with payment collection: ${updateCartResponse.status}`)
+          } else {
+            logger.info(`Cart updated with payment collection: ${paymentSessionId}`)
+          }
+        } else {
+          logger.warn(`Failed to create payment collection: ${paymentCollectionResponse.status}`)
+        }
+      } else {
+        // Use existing payment session
+        paymentSessionId = existingPaymentSessions[0].id
+        logger.info(`Using existing payment session: ${paymentSessionId}`)
+      }
+
+      logger.info(`Payment session ready: ${paymentSessionId}`)
+      
+    } catch (paymentSessionError: any) {
+      logger.warn(`Payment session creation failed: ${paymentSessionError.message}`)
+      // Continue with payment initiation even if payment session creation fails
+      // The payment can still be processed, but cart completion might fail later
+    }
+
+    // Step 2: Create Tap charge
     const chargeData = {
       amount: amount,
       currency: currency.toUpperCase(),
@@ -55,6 +149,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       metadata: {
         cart_id: cart_id,
         email: customer_email,
+        payment_session_id: paymentSessionId, // Include payment session ID if available
       },
       reference: {
         transaction: cart_id,
@@ -77,14 +172,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         id: "src_all",
       },
       post: {
-        url: `${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/webhooks/tap`,
+        url: `${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/webhooks/tap?cart_id=${cart_id}`,
       },
       redirect: {
         url: `${frontendUrl}/en/ar/checkout/payment-return?cart_id=${cart_id}`,
       },
     }
 
-    logger.info(`Creating Tap charge: cart_id=${cart_id}, amount=${amount}, currency=${currency}`)
+    logger.info(`Creating Tap charge: cart_id=${cart_id}, amount=${amount}, currency=${currency}, payment_session=${paymentSessionId}`)
 
     const response = await fetch(`${tapBaseUrl}/charges`, {
       method: "POST",
@@ -114,6 +209,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       status: data.status,
       amount: data.amount,
       currency: data.currency,
+      payment_session_id: paymentSessionId, // Return payment session ID for reference
     })
   } catch (error: any) {
     logger.error(`Tap payment initiation error: ${error.message}`)
