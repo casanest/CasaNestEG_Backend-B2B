@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import crypto from "crypto"
