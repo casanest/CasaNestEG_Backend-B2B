@@ -6,6 +6,8 @@ interface InitiateTapPaymentRequest {
   amount: number
   currency: string
   customer_email: string
+  locale?: string
+  country_code?: string
   billing_address: {
     first_name: string
     last_name: string
@@ -23,6 +25,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       amount,
       currency,
       customer_email,
+      locale = 'en',
+      country_code = 'eg',
       billing_address,
     }: InitiateTapPaymentRequest = req.body as InitiateTapPaymentRequest
 
@@ -175,7 +179,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         url: `${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/webhooks/tap?cart_id=${cart_id}`,
       },
       redirect: {
-        url: `${frontendUrl}/en/ar/checkout/payment-return?cart_id=${cart_id}`,
+        url: `${frontendUrl}/${locale}/${country_code}/checkout/payment-return?cart_id=${cart_id}`,
       },
     }
 
