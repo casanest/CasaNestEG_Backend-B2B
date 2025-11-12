@@ -60,7 +60,13 @@ module.exports = defineConfig({
     },
   },
   admin: {
-    disable: false,
+    vite: () => {
+      return {
+        server: {
+          allowedHosts: ['admin.lacasa-eg.com'],
+        },
+      }
+    },
   },
   plugins:[...plugins],
 modules: {
