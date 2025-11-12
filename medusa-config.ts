@@ -2,14 +2,19 @@
 import { loadEnv, defineConfig, Modules } from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
+
+const uploadDir = process.env.FILE_UPLOAD_DIR ?? 'static/uploads'
+const publicUploadPath = uploadDir.startsWith('static')
+  ? `/static${uploadDir.slice('static'.length)}`
+  : `/${uploadDir.replace(/^\/+/, '')}`
+
+const backendUrlBase =
+  process.env.FILE_PROVIDER_BACKEND_URL ??
+  (process.env.MEDUSA_BACKEND_URL
+    ? `${process.env.MEDUSA_BACKEND_URL.replace(/\/$/, '')}${publicUploadPath}`
+    : `http://localhost:9000${publicUploadPath}`)
+
 const plugins = [
-   {
-      resolve: "@medusajs/file-local",
-      options: {
-        upload_dir: "uploads",
-        backend_url: process.env.MEDUSA_BACKEND_URL,
-      },
-    },
   {
     resolve: '@rokmohar/medusa-plugin-meilisearch',
     options: {
@@ -48,6 +53,43 @@ const plugins = [
     },
   },
 ]
+
+const modulesConfig = {
+  [Modules.FILE]: {
+    resolve: '@medusajs/medusa/file',
+    options: {
+      providers: [
+        {
+          resolve: '@medusajs/medusa/file-local',
+          id: 'local',
+          options: {
+            upload_dir: uploadDir,
+            backend_url: backendUrlBase,
+          },
+        },
+      ],
+    },
+  },
+  [Modules.PAYMENT]: {
+    resolve: '@medusajs/medusa/payment',
+    options: {
+      providers: [
+        {
+          resolve: './src/modules/tap',
+          id: 'tap',
+          options: {
+            secret_key: process.env.TAP_SECRET_KEY!,
+            public_key: process.env.TAP_PUBLIC_KEY!,
+            base_url: process.env.TAP_BASE_URL || 'https://api.tap.company/v2',
+            debug: process.env.NODE_ENV === 'development',
+            domain: process.env.FRONTEND_URL || 'http://localhost:8000',
+          },
+        },
+      ],
+    },
+  },
+}
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -66,31 +108,8 @@ module.exports = defineConfig({
           allowedHosts: ['admin.lacasa-eg.com'],
         },
       }
-    },
+    }
   },
-  plugins:[...plugins],
-modules: {
-[Modules.PAYMENT]:  {
-    resolve: "@medusajs/medusa/payment", 
-    options: {
-      providers: [
-        {
-          resolve: "./src/modules/tap", 
-          id: "tap", 
-          options: {
-            secret_key: process.env.TAP_SECRET_KEY!,
-            public_key: process.env.TAP_PUBLIC_KEY!,
-            base_url: process.env.TAP_BASE_URL || "https://api.tap.company/v2",
-            debug: process.env.NODE_ENV === "development",
-            domain: process.env.FRONTEND_URL || "http://localhost:8000",
-          },
-        },
-      ],
-    },
-  },
-}
-
-
-  
+  plugins: [...plugins],
+  modules: modulesConfig,
 })
-

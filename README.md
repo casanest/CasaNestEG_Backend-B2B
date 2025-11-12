@@ -54,6 +54,12 @@ The community and core team are available in [GitHub Discussions](https://github
 
 Join our [Discord server](https://discord.com/invite/medusajs) to meet other community members.
 
+## Local uploads
+
+- Uploaded assets are stored in `static/uploads` by default so the development watcher ignores them and the dev server doesn’t restart after each upload.
+- You can override the location with `FILE_UPLOAD_DIR=static/uploads` (or another path) and pass a fully-qualified URL with `FILE_PROVIDER_BACKEND_URL` if your backend runs behind a reverse proxy.
+- After changing these values, restart `npm run dev` to apply them.
+
 ## Other channels
 
 - [GitHub Issues](https://github.com/medusajs/medusa/issues)
