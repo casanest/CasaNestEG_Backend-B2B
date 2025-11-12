@@ -1,0 +1,12 @@
+{
+    "ignore": [
+      "uploads/**",
+      "static/**", 
+      "public/**",
+      ".medusa/**",
+      "dist/**",
+      "build/**"
+    ],
+    "watch": ["src"],
+    "ext": "js,ts"
+  }
