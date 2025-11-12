@@ -27,3 +27,15 @@ build
 .medusa
 /static/public/admin
 /public
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.webp
+*.mp4
+*.mov
+*.avi
+*.mkv   
+*.crt
+.vscode-upload.json
