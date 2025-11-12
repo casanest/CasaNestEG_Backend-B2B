@@ -7,6 +7,7 @@ const plugins = [
       resolve: "@medusajs/file-local",
       options: {
         upload_dir: "uploads",
+        backend_url: process.env.MEDUSA_BACKEND_URL,
       },
     },
   {
@@ -59,7 +60,13 @@ module.exports = defineConfig({
     },
   },
   admin: {
-    disable: false,
+    vite: () => {
+      return {
+        server: {
+          allowedHosts: ['admin.lacasa-eg.com'],
+        },
+      }
+    },
   },
   plugins:[...plugins],
 modules: {
