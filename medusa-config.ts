@@ -12,7 +12,7 @@ const backendUrlBase =
   process.env.FILE_PROVIDER_BACKEND_URL ??
   (process.env.MEDUSA_BACKEND_URL
     ? `${process.env.MEDUSA_BACKEND_URL.replace(/\/$/, '')}${publicUploadPath}`
-    : `http://localhost:9000${publicUploadPath}`)
+    : `http://localhost:3000${publicUploadPath}`)
 
 const plugins = [
   {
@@ -87,6 +87,12 @@ const modulesConfig = {
         },
       ],
     },
+  },
+  test: {
+    resolve: './src/modules/test',
+  },
+  rfq: {
+    resolve: './src/modules/rfq',
   },
 }
 

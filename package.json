@@ -24,7 +24,7 @@
   "dependencies": {
     "@medusajs/admin-sdk": "2.6.1",
     "@medusajs/cli": "2.6.1",
-    "@medusajs/file-local": "^2.8.5",
+    "@medusajs/file-local": "2.6.1",
     "@medusajs/framework": "2.6.1",
     "@medusajs/medusa": "2.6.1",
     "@mikro-orm/core": "6.4.3",
@@ -58,5 +58,6 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "packageManager": "yarn@3.2.3+sha512.f26f951f67de0c6a33ee381e5ff364709c87e70eb5e65c694e4facde3512f1fa80b8679e6ba31ce7d340fbb46f08dd683af9457e240f25a204be7427940d767e"
 }
