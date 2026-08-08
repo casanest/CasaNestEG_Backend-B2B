@@ -94,6 +94,9 @@ const modulesConfig = {
   rfq: {
     resolve: './src/modules/rfq',
   },
+  appointments: {
+    resolve: './src/modules/appointments',
+  },
 }
 
 module.exports = defineConfig({

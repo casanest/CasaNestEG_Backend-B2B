@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import TestModuleService from "../../../modules/test/service"
 import { TEST_MODULE } from "../../../modules/test"
+import { getRequestIp } from "../../../lib/request-ip"
 
 interface CreateTestRequest {
   message: string
@@ -26,6 +27,7 @@ export async function POST(
 
   const test = await testModuleService.createTests({
     message,
+    ip_address: getRequestIp(req),
   })
 
   res.json({

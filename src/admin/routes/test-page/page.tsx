@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 interface TestRecord {
   id: string
   message: string
+  ip_address: string | null
   created_at: string
 }
 
@@ -50,6 +51,9 @@ const TestPage = () => {
             >
               <Text className="font-medium">{test.message}</Text>
               <Text className="text-xs text-ui-fg-subtle mt-2">
+                Sender IP: {test.ip_address || "Unknown"}
+              </Text>
+              <Text className="text-xs text-ui-fg-subtle mt-1">
                 Created: {formatDate(test.created_at)}
               </Text>
             </div>
