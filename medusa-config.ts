@@ -60,11 +60,18 @@ const modulesConfig = {
     options: {
       providers: [
         {
-          resolve: '@medusajs/medusa/file-local',
-          id: 'local',
+          resolve: './src/modules/r2-file',
+          id: 'r2',
           options: {
-            upload_dir: uploadDir,
-            backend_url: backendUrlBase,
+            file_url: process.env.R2_PUBLIC_URL,
+            access_key_id: process.env.R2_ACCESS_KEY_ID,
+            secret_access_key: process.env.R2_SECRET_ACCESS_KEY,
+            region: 'auto',
+            bucket: process.env.R2_BUCKET,
+            endpoint: process.env.R2_ENDPOINT,
+            additional_client_config: {
+              forcePathStyle: true,
+            },
           },
         },
       ],

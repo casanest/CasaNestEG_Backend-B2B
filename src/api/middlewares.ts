@@ -3,6 +3,8 @@ import {
   validateAndTransformBody,
   validateAndTransformQuery,
 } from '@medusajs/framework';
+import type { MedusaRequest, MedusaResponse, MedusaNextFunction } from '@medusajs/framework/http';
+import multer from 'multer';
 import { storeSearchRoutesMiddlewares } from './store/search/middlewares';
 import { PostStoreRfq } from './store/rfq/validators';
 import { PostStoreAppointment } from './store/appointments/validators';
@@ -10,12 +12,33 @@ import { GetAdminAppointmentsParams } from './admin/appointments/validators';
 import { listAppointmentsQueryConfig } from './admin/appointments/query-config';
 import { PatchAdminAppointment } from './admin/appointments/[id]/validators';
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit per file
+});
+
+const parseRfqItems = (req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) => {
+  const body = req.body as Record<string, unknown> || {};
+  if (body.items && typeof body.items === 'string') {
+    try {
+      body.items = JSON.parse(body.items);
+    } catch (e) {
+      // Let zod validation catch invalid payloads
+    }
+  }
+  next();
+};
+
 export default defineMiddlewares([
   ...storeSearchRoutesMiddlewares,
   {
     matcher: '/store/rfq',
     method: 'POST',
-    middlewares: [validateAndTransformBody(PostStoreRfq)],
+    middlewares: [
+      upload.array('files', 10),
+      parseRfqItems,
+      validateAndTransformBody(PostStoreRfq)
+    ],
   },
   {
     matcher: '/store/appointments',

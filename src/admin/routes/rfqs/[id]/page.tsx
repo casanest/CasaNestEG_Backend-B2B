@@ -1,5 +1,5 @@
 import { Container, Heading, Text, Button } from "@medusajs/ui"
-import { useRfq } from "../../../hooks/api/rfq"
+import { useRfq, useRfqAttachments } from "../../../hooks/api/rfq"
 import { useParams, useNavigate } from "react-router-dom"
 
 interface RfqItem {
@@ -23,6 +23,7 @@ const RfqDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data, isLoading, error } = useRfq(id || '')
+  const { data: attData, isLoading: attLoading } = useRfqAttachments(id || '')
 
   if (isLoading) {
     return (
@@ -121,6 +122,30 @@ const RfqDetailPage = () => {
             </div>
           ) : (
             <Text className="text-ui-fg-subtle">No items</Text>
+          )}
+        </div>
+
+        {/* Attachments Block */}
+        <div className="border rounded-lg p-4">
+          <Heading level="h2" className="mb-3">Attachments</Heading>
+          {attLoading ? (
+            <Text className="text-ui-fg-subtle">Loading attachments...</Text>
+          ) : attData?.attachments && attData.attachments.length > 0 ? (
+            <div className="space-y-3">
+              {attData.attachments.map((att: any) => (
+                <div key={att.id} className="flex items-center justify-between border-b last:border-0 pb-2 last:pb-0">
+                  <div className="flex flex-col">
+                    <Text className="font-medium">{att.file_name}</Text>
+                    <Text className="text-xs text-ui-fg-subtle">{(att.size / 1024).toFixed(1)} KB - {att.mime_type}</Text>
+                  </div>
+                  <Button variant="secondary" size="small" onClick={() => window.open(att.url, '_blank')}>
+                    View / Download
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Text className="text-ui-fg-subtle">No attachments included.</Text>
           )}
         </div>
       </div>

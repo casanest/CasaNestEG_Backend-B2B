@@ -9,7 +9,7 @@ export const PostStoreRfq = z.object({
   items: z.array(z.object({
     product_id: z.string(),
     quantity: z.number().int().min(1),
-  })).min(1),
+  })).optional(),
 })
 
 export type PostStoreRfqType = z.infer<typeof PostStoreRfq>
