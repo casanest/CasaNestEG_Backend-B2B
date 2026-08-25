@@ -104,6 +104,9 @@ const modulesConfig = {
   appointments: {
     resolve: './src/modules/appointments',
   },
+  productCustom: {
+    resolve: './src/modules/productCustom',
+  },
 }
 
 module.exports = defineConfig({

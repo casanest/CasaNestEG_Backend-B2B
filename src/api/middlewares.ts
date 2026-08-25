@@ -11,6 +11,8 @@ import { PostStoreAppointment } from './store/appointments/validators';
 import { GetAdminAppointmentsParams } from './admin/appointments/validators';
 import { listAppointmentsQueryConfig } from './admin/appointments/query-config';
 import { PatchAdminAppointment } from './admin/appointments/[id]/validators';
+import { PostProductCustomSchema } from './admin/products/[id]/custom/validators';
+import attachProductCustomFields from './middlewares/attach-product-custom-fields';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -56,5 +58,30 @@ export default defineMiddlewares([
     matcher: '/admin/appointments/:id',
     method: 'PATCH',
     middlewares: [validateAndTransformBody(PatchAdminAppointment)],
+  },
+  {
+    matcher: '/admin/products/:id/custom',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostProductCustomSchema)],
+  },
+  {
+    matcher: '/admin/products',
+    method: 'GET',
+    middlewares: [attachProductCustomFields],
+  },
+  {
+    matcher: '/admin/products/:id',
+    method: 'GET',
+    middlewares: [attachProductCustomFields],
+  },
+  {
+    matcher: '/store/products',
+    method: 'GET',
+    middlewares: [attachProductCustomFields],
+  },
+  {
+    matcher: '/store/products/:id',
+    method: 'GET',
+    middlewares: [attachProductCustomFields],
   },
 ]);
