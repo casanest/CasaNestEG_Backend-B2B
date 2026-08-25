@@ -107,6 +107,9 @@ const modulesConfig = {
   productCustom: {
     resolve: './src/modules/productCustom',
   },
+  portfolio: {
+    resolve: './src/modules/portfolio',
+  },
 }
 
 module.exports = defineConfig({

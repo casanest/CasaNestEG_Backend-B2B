@@ -13,6 +13,8 @@ import { listAppointmentsQueryConfig } from './admin/appointments/query-config';
 import { PatchAdminAppointment } from './admin/appointments/[id]/validators';
 import { PostProductCustomSchema } from './admin/products/[id]/custom/validators';
 import attachProductCustomFields from './middlewares/attach-product-custom-fields';
+import { PostAdminPortfolioCategorySchema, PostAdminPortfolioCategoryUpdateSchema } from './admin/portfolio/categories/validators';
+import { PostAdminPortfolioProjectSchema, PostAdminPortfolioProjectUpdateSchema } from './admin/portfolio/projects/validators';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -83,5 +85,25 @@ export default defineMiddlewares([
     matcher: '/store/products/:id',
     method: 'GET',
     middlewares: [attachProductCustomFields],
+  },
+  {
+    matcher: '/admin/portfolio/categories',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPortfolioCategorySchema)],
+  },
+  {
+    matcher: '/admin/portfolio/categories/:id',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPortfolioCategoryUpdateSchema)],
+  },
+  {
+    matcher: '/admin/portfolio/projects',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPortfolioProjectSchema)],
+  },
+  {
+    matcher: '/admin/portfolio/projects/:id',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPortfolioProjectUpdateSchema)],
   },
 ]);
