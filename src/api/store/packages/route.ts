@@ -20,6 +20,8 @@ export async function GET(
       "description_en",
       "description_ar",
       "image_url",
+      "titles.products.id",
+      "titles.products.status",
     ],
     filters: { is_published: true },
     pagination: {
@@ -27,5 +29,24 @@ export async function GET(
     },
   })
 
-  res.json({ packages })
+  const result = packages.map((pkg: any) => {
+    const titles = pkg.titles ?? []
+    const item_count = titles.reduce(
+      (sum: number, title: any) =>
+        sum +
+        (title.products ?? []).filter(
+          (p: any) => p.status === "published"
+        ).length,
+      0
+    )
+
+    const { titles: _, ...rest } = pkg
+
+    return {
+      ...rest,
+      item_count,
+    }
+  })
+
+  res.json({ packages: result })
 }
