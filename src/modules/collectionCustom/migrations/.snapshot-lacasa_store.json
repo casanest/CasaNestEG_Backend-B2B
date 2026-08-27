@@ -15,8 +15,8 @@
           "nullable": false,
           "mappedType": "text"
         },
-        "product_id": {
-          "name": "product_id",
+        "collection_id": {
+          "name": "collection_id",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
@@ -24,27 +24,8 @@
           "nullable": false,
           "mappedType": "text"
         },
-        "document_url": {
-          "name": "document_url",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "moq": {
-          "name": "moq",
-          "type": "integer",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "1",
-          "mappedType": "integer"
-        },
-        "sub_collection_id": {
-          "name": "sub_collection_id",
+        "image_url": {
+          "name": "image_url",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
@@ -85,20 +66,20 @@
           "mappedType": "datetime"
         }
       },
-      "name": "product_custom",
+      "name": "collection_custom",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "IDX_product_custom_deleted_at",
+          "keyName": "IDX_collection_custom_deleted_at",
           "columnNames": [],
           "composite": false,
           "constraint": false,
           "primary": false,
           "unique": false,
-          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_product_custom_deleted_at\" ON \"product_custom\" (deleted_at) WHERE deleted_at IS NULL"
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_collection_custom_deleted_at\" ON \"collection_custom\" (deleted_at) WHERE deleted_at IS NULL"
         },
         {
-          "keyName": "product_custom_pkey",
+          "keyName": "collection_custom_pkey",
           "columnNames": [
             "id"
           ],

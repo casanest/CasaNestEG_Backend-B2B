@@ -110,6 +110,9 @@ const modulesConfig = {
   portfolio: {
     resolve: './src/modules/portfolio',
   },
+  package: {
+    resolve: './src/modules/package',
+  },
 }
 
 module.exports = defineConfig({

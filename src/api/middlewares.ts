@@ -15,6 +15,8 @@ import { PostProductCustomSchema } from './admin/products/[id]/custom/validators
 import attachProductCustomFields from './middlewares/attach-product-custom-fields';
 import { PostAdminPortfolioCategorySchema, PostAdminPortfolioCategoryUpdateSchema } from './admin/portfolio/categories/validators';
 import { PostAdminPortfolioProjectSchema, PostAdminPortfolioProjectUpdateSchema } from './admin/portfolio/projects/validators';
+import { PostAdminPackageSchema, PostAdminPackageUpdateSchema, PostAdminPackageTitleSchema, PostAdminReorderTitlesSchema } from './admin/packages/validators';
+import { PostAdminPackageTitleUpdateSchema, PostAdminAttachProductsSchema } from './admin/package-titles/validators';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -105,5 +107,40 @@ export default defineMiddlewares([
     matcher: '/admin/portfolio/projects/:id',
     method: 'POST',
     middlewares: [validateAndTransformBody(PostAdminPortfolioProjectUpdateSchema)],
+  },
+  {
+    matcher: '/admin/packages',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPackageSchema)],
+  },
+  {
+    matcher: '/admin/packages/:id',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPackageUpdateSchema)],
+  },
+  {
+    matcher: '/admin/packages/:id/titles',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPackageTitleSchema)],
+  },
+  {
+    matcher: '/admin/packages/:id/titles/reorder',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminReorderTitlesSchema)],
+  },
+  {
+    matcher: '/admin/package-titles/:id',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminPackageTitleUpdateSchema)],
+  },
+  {
+    matcher: '/admin/package-titles/:id/products',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminAttachProductsSchema)],
+  },
+  {
+    matcher: '/admin/package-titles/:id/products',
+    method: 'DELETE',
+    middlewares: [validateAndTransformBody(PostAdminAttachProductsSchema)],
   },
 ]);
