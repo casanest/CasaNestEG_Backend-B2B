@@ -116,6 +116,9 @@ const modulesConfig = {
   testimonial: {
     resolve: './src/modules/testimonial',
   },
+  banner: {
+    resolve: './src/modules/banner',
+  },
 }
 
 module.exports = defineConfig({
