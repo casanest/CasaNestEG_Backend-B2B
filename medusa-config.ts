@@ -113,6 +113,9 @@ const modulesConfig = {
   package: {
     resolve: './src/modules/package',
   },
+  testimonial: {
+    resolve: './src/modules/testimonial',
+  },
 }
 
 module.exports = defineConfig({

@@ -31,7 +31,12 @@ export async function GET(
       "titles.products.handle",
       "titles.products.thumbnail",
       "titles.products.status",
+      "titles.products.description",
       "titles.products.metadata",
+      "titles.products.product_custom.moq",
+      "titles.products.variants.id",
+      "titles.products.variants.prices.amount",
+      "titles.products.variants.prices.currency_code",
     ],
     filters: { slug },
   })
@@ -52,9 +57,41 @@ export async function GET(
     .sort(sortByOrder)
     .map((title: any) => ({
       ...title,
-      products: (title.products ?? []).filter(
-        (p: any) => p.status === "published"
-      ),
+      products: (title.products ?? [])
+        .filter((p: any) => p.status === "published")
+        .map((p: any) => {
+          const metadata = p.metadata ?? {}
+          const localizations = metadata.localizations ?? {}
+          const arLocalization = localizations.ar ?? {}
+
+          const moq =
+            p.product_custom?.[0]?.moq ??
+            metadata.MOQ ??
+            metadata.moq ??
+            1
+
+          const variants = p.variants ?? []
+          const firstVariant = variants[0]
+          const prices = firstVariant?.prices ?? []
+          const firstPrice = prices[0]
+
+          return {
+            id: p.id,
+            title: p.title,
+            handle: p.handle,
+            thumbnail: p.thumbnail,
+            status: p.status,
+            description_en: p.description ?? null,
+            description_ar: arLocalization.description ?? null,
+            moq,
+            price: firstPrice
+              ? {
+                  amount: firstPrice.amount,
+                  currency_code: firstPrice.currency_code,
+                }
+              : null,
+          }
+        }),
     }))
 
   res.json({
