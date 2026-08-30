@@ -32,6 +32,65 @@ export async function GET(
     fields: ['*'],
     filters: { rfq_id: id },
   });
+
+  const productIds = items.map((item: any) => item.product_id).filter(Boolean);
+
+  let productVariantMap = new Map<string, { variant_info: string | null; variant_title: string | null; variant_sku: string | null; product_handle: string | null; thumbnail: string | null }>();
+
+  if (productIds.length > 0) {
+    const { data: products } = await query.graph({
+      entity: 'product',
+      fields: [
+        'id',
+        'handle',
+        'thumbnail',
+        'images.url',
+        'variants.id',
+        'variants.title',
+        'variants.sku',
+        'variants.options.value',
+        'variants.options.option.name',
+      ],
+      filters: { id: productIds },
+    });
+
+    for (const product of products as any[]) {
+      const variants = product.variants || [];
+      let variantInfo: string | null = null;
+      let variantTitle: string | null = null;
+      let variantSku: string | null = null;
+
+      if (variants.length > 0) {
+        const variant = variants[0];
+        variantTitle = variant.title || null;
+        variantSku = variant.sku || null;
+        const optionValues = (variant.options || [])
+          .map((opt: any) => opt?.value)
+          .filter(Boolean);
+        variantInfo = optionValues.length > 0 ? optionValues.join(' / ') : null;
+      }
+
+      productVariantMap.set(product.id, {
+        variant_info: variantInfo,
+        variant_title: variantTitle,
+        variant_sku: variantSku,
+        product_handle: product.handle || null,
+        thumbnail: product.thumbnail || product.images?.[0]?.url || null,
+      });
+    }
+  }
+
+  const itemsWithVariants = items.map((item: any) => {
+    const pv = productVariantMap.get(item.product_id);
+    return {
+      ...item,
+      variant_info: pv?.variant_info ?? null,
+      variant_title: pv?.variant_title ?? null,
+      variant_sku: pv?.variant_sku ?? null,
+      product_handle: pv?.product_handle ?? null,
+      thumbnail: pv?.thumbnail ?? null,
+    };
+  });
   
-  res.json({ rfq: { ...rfq, items } });
+  res.json({ rfq: { ...rfq, items: itemsWithVariants } });
 }

@@ -8,6 +8,10 @@ type Input = {
 export const resolveProductTitlesStep = createStep(
   "resolve-product-titles-step",
   async (input: Input, { container }) => {
+    if (!input.items || input.items.length === 0) {
+      return new StepResponse([])
+    }
+
     const query = container.resolve(ContainerRegistrationKeys.QUERY)
     
     const productIds = input.items.map((item) => item.product_id)

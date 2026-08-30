@@ -20,6 +20,8 @@ export async function GET(
       'customer_name',
       'company_name',
       'customer_email',
+      'city',
+      'address',
       'status',
       'created_at',
     ],

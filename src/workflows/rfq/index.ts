@@ -9,6 +9,8 @@ export type CreateRfqWorkflowInput = {
   customer_email: string
   customer_phone: string
   company_name?: string
+  city?: string
+  address?: string
   message: string
   items?: { product_id: string; quantity: number }[]
   files?: { originalname: string; buffer: string; mimetype: string; size: number }[]
@@ -24,6 +26,8 @@ export const createRfqWorkflow = createWorkflow(
       customer_email: input.customer_email,
       customer_phone: input.customer_phone,
       company_name: input.company_name,
+      city: input.city,
+      address: input.address,
       message: input.message,
     })
 

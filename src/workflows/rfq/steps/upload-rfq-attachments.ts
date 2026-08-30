@@ -14,15 +14,20 @@ export const uploadRfqAttachmentsStep = createStep(
         }
 
         for (const file of input.files) {
-            const fileBuffer = Buffer.from(file.buffer, 'base64')
-            const objectKey = await uploadPrivateFile(fileBuffer, file.originalname, file.mimetype, input.rfq_id)
-            attachments.push({
-                rfq_id: input.rfq_id,
-                file_name: file.originalname,
-                object_key: objectKey,
-                mime_type: file.mimetype,
-                size: file.size,
-            })
+            try {
+                const fileBuffer = Buffer.from(file.buffer, 'base64')
+                const objectKey = await uploadPrivateFile(fileBuffer, file.originalname, file.mimetype, input.rfq_id)
+                attachments.push({
+                    rfq_id: input.rfq_id,
+                    file_name: file.originalname,
+                    object_key: objectKey,
+                    mime_type: file.mimetype,
+                    size: file.size,
+                })
+            } catch (uploadError) {
+                console.error(`[RFQ] Failed to upload attachment ${file.originalname}:`, uploadError)
+                throw uploadError
+            }
         }
 
         const createdAttachments = await service.createRfqAttachments(attachments)

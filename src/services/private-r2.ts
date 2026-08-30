@@ -1,21 +1,32 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
+const getBucketName = () => {
+    return process.env.Private_Bucket_Name || process.env.R2_BUCKET || ""
+}
+
 export const getPrivateS3Client = () => {
-    let endpoint = process.env.API || '';
-    if (endpoint.includes('/')) {
-        const parts = endpoint.split('/');
-        if (parts.length >= 3) {
-            endpoint = `${parts[0]}//${parts[2]}`;
-        }
+    const endpoint = process.env.R2_ENDPOINT || process.env.API || ""
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID || process.env.Access_Key_ID as string
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || process.env.Secret_Access_Key as string
+    const bucket = getBucketName()
+
+    if (!endpoint || !accessKeyId || !secretAccessKey || !bucket) {
+        const missing = [
+            !endpoint && 'R2_ENDPOINT (or API)',
+            !accessKeyId && 'R2_ACCESS_KEY_ID (or Access_Key_ID)',
+            !secretAccessKey && 'R2_SECRET_ACCESS_KEY (or Secret_Access_Key)',
+            !bucket && 'Private_Bucket_Name (or R2_BUCKET)'
+        ].filter(Boolean).join(', ')
+        throw new Error(`[RFQ] Missing S3 env vars: ${missing}. File uploads will fail until these are set in .env`)
     }
 
     return new S3Client({
         region: "auto",
         endpoint: endpoint,
         credentials: {
-            accessKeyId: process.env.Access_Key_ID as string,
-            secretAccessKey: process.env.Secret_Access_Key as string
+            accessKeyId,
+            secretAccessKey
         },
         forcePathStyle: true,
     })
@@ -32,7 +43,7 @@ export const uploadPrivateFile = async (
     const objectKey = `rfq/${rfqId}/${uniqueHash}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`
 
     await s3.send(new PutObjectCommand({
-        Bucket: process.env.Private_Bucket_Name,
+        Bucket: getBucketName(),
         Key: objectKey,
         Body: fileBuffer,
         ContentType: mimeType,
@@ -44,7 +55,7 @@ export const uploadPrivateFile = async (
 export const getPrivatePresignedUrl = async (objectKey: string) => {
     const s3 = getPrivateS3Client()
     const command = new GetObjectCommand({
-        Bucket: process.env.Private_Bucket_Name,
+        Bucket: getBucketName(),
         Key: objectKey,
     })
 
@@ -54,7 +65,7 @@ export const getPrivatePresignedUrl = async (objectKey: string) => {
 export const deletePrivateFile = async (objectKey: string) => {
     const s3 = getPrivateS3Client()
     await s3.send(new DeleteObjectCommand({
-        Bucket: process.env.Private_Bucket_Name,
+        Bucket: getBucketName(),
         Key: objectKey,
     }))
 }

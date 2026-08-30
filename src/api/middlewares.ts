@@ -22,8 +22,12 @@ import { PostAdminBannerSchema, PostAdminBannerUpdateSchema } from './admin/bann
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit per file
 });
+
+const logRfqStep = (label: string) => (req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) => {
+  console.log(`[RFQ-MW] ${label} — body keys: ${Object.keys(req.body || {}).join(', ')}, files: ${(req as any).files?.length ?? 0}`)
+  next();
+};
 
 const parseRfqItems = (req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) => {
   const body = req.body as Record<string, unknown> || {};
@@ -43,9 +47,13 @@ export default defineMiddlewares([
     matcher: '/store/rfq',
     method: 'POST',
     middlewares: [
-      upload.array('files', 10),
+      logRfqStep('before multer'),
+      upload.array('files'),
+      logRfqStep('after multer'),
       parseRfqItems,
-      validateAndTransformBody(PostStoreRfq)
+      logRfqStep('after parseRfqItems'),
+      validateAndTransformBody(PostStoreRfq),
+      logRfqStep('after validation'),
     ],
   },
   {
