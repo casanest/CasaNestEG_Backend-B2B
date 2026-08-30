@@ -196,6 +196,42 @@
           "default": "false",
           "mappedType": "boolean"
         },
+        "quote_en": {
+          "name": "quote_en",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "quote_ar": {
+          "name": "quote_ar",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "position_en": {
+          "name": "position_en",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "position_ar": {
+          "name": "position_ar",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
         "category_id": {
           "name": "category_id",
           "type": "text",
@@ -614,6 +650,15 @@
         },
         "image_url": {
           "name": "image_url",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
+        "image_url_2": {
+          "name": "image_url_2",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,

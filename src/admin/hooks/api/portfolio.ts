@@ -20,6 +20,10 @@ export type PortfolioProject = {
   hero_image_url: string
   project_date: string
   is_in_homepage: boolean
+  quote_en: string | null
+  quote_ar: string | null
+  position_en: string | null
+  position_ar: string | null
   created_at: string
   updated_at: string
 }
@@ -40,6 +44,7 @@ export type PortfolioSubParagraph = {
   text_en: string
   text_ar: string
   image_url?: string | null
+  image_url_2?: string | null
   display_order: number
 }
 
@@ -73,6 +78,10 @@ export type CreateProjectInput = {
   hero_image_url: string
   project_date: string
   is_in_homepage?: boolean
+  quote_en?: string | null
+  quote_ar?: string | null
+  position_en?: string | null
+  position_ar?: string | null
   metrics?: PortfolioMetric[]
   sub_paragraphs?: PortfolioSubParagraph[]
   gallery_images?: PortfolioGalleryImage[]

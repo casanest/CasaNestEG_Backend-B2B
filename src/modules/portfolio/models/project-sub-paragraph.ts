@@ -8,6 +8,7 @@ const ProjectSubParagraph = model.define("project_sub_paragraph", {
   text_en: model.text(),
   text_ar: model.text(),
   image_url: model.text().nullable(),
+  image_url_2: model.text().nullable(),
   display_order: model.number().default(0),
   project: model.belongsTo(() => Project, {
     mappedBy: "sub_paragraphs",

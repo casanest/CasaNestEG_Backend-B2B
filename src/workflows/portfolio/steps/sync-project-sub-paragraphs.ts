@@ -9,6 +9,7 @@ type SubParagraphInput = {
   text_en: string
   text_ar: string
   image_url?: string | null
+  image_url_2?: string | null
   display_order: number
 }
 
@@ -49,6 +50,7 @@ export const syncProjectSubParagraphsStep = createStep(
           text_en: sub.text_en,
           text_ar: sub.text_ar,
           image_url: sub.image_url,
+          image_url_2: sub.image_url_2,
           display_order: sub.display_order,
         })
         updated.push(result)
@@ -60,6 +62,7 @@ export const syncProjectSubParagraphsStep = createStep(
           text_en: sub.text_en,
           text_ar: sub.text_ar,
           image_url: sub.image_url ?? null,
+          image_url_2: sub.image_url_2 ?? null,
           display_order: sub.display_order,
         })
         created.push(result)
@@ -85,6 +88,7 @@ export const syncProjectSubParagraphsStep = createStep(
         text_en: sub.text_en,
         text_ar: sub.text_ar,
         image_url: sub.image_url,
+        image_url_2: sub.image_url_2,
         display_order: sub.display_order,
       })
     }

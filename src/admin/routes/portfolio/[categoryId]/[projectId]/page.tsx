@@ -38,6 +38,11 @@ const ProjectEditPage = () => {
   const [projectDate, setProjectDate] = useState("")
   const [isInHomepage, setIsInHomepage] = useState(false)
 
+  const [quoteEn, setQuoteEn] = useState("")
+  const [quoteAr, setQuoteAr] = useState("")
+  const [positionEn, setPositionEn] = useState("")
+  const [positionAr, setPositionAr] = useState("")
+
   const [metrics, setMetrics] = useState<PortfolioMetric[]>([])
   const [subParagraphs, setSubParagraphs] = useState<PortfolioSubParagraph[]>([])
   const [galleryImages, setGalleryImages] = useState<PortfolioGalleryImage[]>([])
@@ -57,6 +62,10 @@ const ProjectEditPage = () => {
       const dateStr = p.project_date ? new Date(p.project_date).toISOString().split("T")[0] : ""
       setProjectDate(dateStr)
       setIsInHomepage(p.is_in_homepage ?? false)
+      setQuoteEn(p.quote_en || "")
+      setQuoteAr(p.quote_ar || "")
+      setPositionEn(p.position_en || "")
+      setPositionAr(p.position_ar || "")
       setMetrics((p.metrics ?? []).map((m: any) => ({
         id: m.id,
         label_en: m.label_en,
@@ -72,6 +81,7 @@ const ProjectEditPage = () => {
         text_en: s.text_en,
         text_ar: s.text_ar,
         image_url: s.image_url,
+        image_url_2: s.image_url_2,
         display_order: s.display_order,
       })))
       setGalleryImages((p.gallery_images ?? []).map((g: any) => ({
@@ -118,7 +128,7 @@ const ProjectEditPage = () => {
   }
 
   const addSubParagraph = () => {
-    setSubParagraphs([...subParagraphs, { heading_en: "", heading_ar: "", text_en: "", text_ar: "", image_url: null, display_order: subParagraphs.length }])
+    setSubParagraphs([...subParagraphs, { heading_en: "", heading_ar: "", text_en: "", text_ar: "", image_url: null, image_url_2: null, display_order: subParagraphs.length }])
   }
   const updateSubParagraph = (index: number, field: keyof PortfolioSubParagraph, value: any) => {
     const updated = [...subParagraphs]
@@ -136,12 +146,12 @@ const ProjectEditPage = () => {
     ;[updated[index], updated[swapIndex]] = [updated[swapIndex], updated[index]]
     setSubParagraphs(updated.map((s, i) => ({ ...s, display_order: i })))
   }
-  const handleSubParagraphImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubParagraphImageUpload = async (index: number, field: "image_url" | "image_url_2", e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     try {
       const url = await uploadFile(file)
-      updateSubParagraph(index, "image_url", url)
+      updateSubParagraph(index, field, url)
       toast.success("Image uploaded")
     } catch {
       toast.error("Failed to upload image")
@@ -190,6 +200,10 @@ const ProjectEditPage = () => {
         hero_image_url: heroImageUrl,
         project_date: projectDate,
         is_in_homepage: isInHomepage,
+        quote_en: quoteEn || null,
+        quote_ar: quoteAr || null,
+        position_en: positionEn || null,
+        position_ar: positionAr || null,
         metrics: metrics.map((m, i) => ({ ...m, display_order: i })),
         sub_paragraphs: subParagraphs.map((s, i) => ({ ...s, display_order: i })),
         gallery_images: galleryImages.map((g, i) => ({ ...g, display_order: i })),
@@ -378,18 +392,56 @@ const ProjectEditPage = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleSubParagraphImageUpload(index, e)}
+                  onChange={(e) => handleSubParagraphImageUpload(index, "image_url", e)}
                   className="hidden"
                   id={`sub-img-${index}`}
                 />
                 <Button variant="secondary" size="small" onClick={() => document.getElementById(`sub-img-${index}`)?.click()}>
-                  {sub.image_url ? "Replace Image" : "Upload Image"}
+                  {sub.image_url ? "Replace Image 1" : "Upload Image 1"}
                 </Button>
                 {sub.image_url && <img src={sub.image_url} alt="Section" className="h-16 w-24 rounded object-cover" />}
+              </div>
+              <div className="mt-2 flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleSubParagraphImageUpload(index, "image_url_2", e)}
+                  className="hidden"
+                  id={`sub-img2-${index}`}
+                />
+                <Button variant="secondary" size="small" onClick={() => document.getElementById(`sub-img2-${index}`)?.click()}>
+                  {sub.image_url_2 ? "Replace Image 2" : "Upload Image 2"}
+                </Button>
+                {sub.image_url_2 && <img src={sub.image_url_2} alt="Section 2" className="h-16 w-24 rounded object-cover" />}
               </div>
             </div>
           ))}
           {subParagraphs.length === 0 && <Text className="text-ui-fg-subtle">No sub-paragraphs added</Text>}
+        </div>
+
+        {/* Testimonial */}
+        <div className="flex flex-col gap-4">
+          <Heading level="h2">Testimonial (Optional)</Heading>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Quote (English)</Label>
+              <Textarea value={quoteEn} onChange={(e) => setQuoteEn(e.target.value)} rows={3} placeholder="Excellent work and professionalism..." />
+            </div>
+            <div>
+              <Label>Quote (Arabic)</Label>
+              <Textarea value={quoteAr} onChange={(e) => setQuoteAr(e.target.value)} rows={3} dir="rtl" placeholder="عمل ممتاز واحترافية عالية..." />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Position (English)</Label>
+              <Input value={positionEn} onChange={(e) => setPositionEn(e.target.value)} placeholder="CEO, Acme Inc." />
+            </div>
+            <div>
+              <Label>Position (Arabic)</Label>
+              <Input value={positionAr} onChange={(e) => setPositionAr(e.target.value)} dir="rtl" placeholder="الرئيس التنفيذي، شركة أكمي" />
+            </div>
+          </div>
         </div>
 
         {/* Gallery */}

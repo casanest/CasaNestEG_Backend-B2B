@@ -12,6 +12,10 @@ type CreateProjectStepInput = {
   hero_image_url: string
   project_date: Date
   is_in_homepage?: boolean
+  quote_en?: string | null
+  quote_ar?: string | null
+  position_en?: string | null
+  position_ar?: string | null
 }
 
 export const createProjectStep = createStep(

@@ -21,6 +21,7 @@ type SubParagraphInput = {
   text_en: string
   text_ar: string
   image_url?: string | null
+  image_url_2?: string | null
   display_order: number
 }
 
@@ -39,6 +40,10 @@ type CreateProjectWorkflowInput = {
   hero_image_url: string
   project_date: Date
   is_in_homepage?: boolean
+  quote_en?: string | null
+  quote_ar?: string | null
+  position_en?: string | null
+  position_ar?: string | null
   metrics?: MetricInput[]
   sub_paragraphs?: SubParagraphInput[]
   gallery_images?: GalleryImageInput[]
@@ -57,6 +62,10 @@ export const createProjectWorkflow = createWorkflow(
       hero_image_url: input.hero_image_url,
       project_date: input.project_date,
       is_in_homepage: input.is_in_homepage,
+      quote_en: input.quote_en,
+      quote_ar: input.quote_ar,
+      position_en: input.position_en,
+      position_ar: input.position_ar,
     })
 
     const metrics = createProjectMetricsStep({

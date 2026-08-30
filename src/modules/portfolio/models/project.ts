@@ -14,6 +14,10 @@ const Project = model.define("project", {
   hero_image_url: model.text(),
   project_date: model.dateTime(),
   is_in_homepage: model.boolean().default(false),
+  quote_en: model.text().nullable(),
+  quote_ar: model.text().nullable(),
+  position_en: model.text().nullable(),
+  position_ar: model.text().nullable(),
   category: model.belongsTo(() => ProjectCategory, {
     mappedBy: "projects",
   }),

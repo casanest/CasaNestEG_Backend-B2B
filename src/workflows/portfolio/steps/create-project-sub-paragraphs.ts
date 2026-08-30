@@ -8,6 +8,7 @@ type SubParagraphInput = {
   text_en: string
   text_ar: string
   image_url?: string | null
+  image_url_2?: string | null
   display_order: number
 }
 

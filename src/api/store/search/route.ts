@@ -102,7 +102,11 @@ class SearchEngine {
     }
 
     if (price_to) {
-      this.#qb.andWhere('price_data.max_price', '<=', price_to);
+      this.#qb.andWhere(
+        this.#connection.raw('COALESCE(price_data.sale_price, price_data.regular_price)'),
+        '<=',
+        price_to
+      );
     }
   }
 
