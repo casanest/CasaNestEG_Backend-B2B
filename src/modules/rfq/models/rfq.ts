@@ -9,7 +9,7 @@ const Rfq = model.define("rfq", {
   city: model.text().nullable(),
   address: model.text().nullable(),
   message: model.text(),
-  status: model.enum(["pending", "quoted", "closed"]).default("pending"),
+  status: model.enum(["pending", "quoted", "closed", "done"]).default("pending"),
 })
 
 export default Rfq

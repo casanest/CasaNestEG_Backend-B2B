@@ -20,6 +20,10 @@ import { PostAdminPackageTitleUpdateSchema, PostAdminAttachProductsSchema } from
 import { PostAdminTestimonialSchema, PostAdminTestimonialUpdateSchema } from './admin/testimonials/validators';
 import { PostAdminBannerSchema, PostAdminBannerUpdateSchema } from './admin/banners/validators';
 import { PostAdminSocialMediaSchema, PostAdminSocialMediaUpdateSchema } from './admin/social-media/validators';
+import { GetAdminRfqsParams } from './admin/rfq/validators';
+import { listRfqsQueryConfig } from './admin/rfq/query-config';
+import { PatchAdminRfq } from './admin/rfq/[id]/validators';
+import { PostAdminRfqComment } from './admin/rfq/[id]/comments/validators';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -60,7 +64,7 @@ export default defineMiddlewares([
   {
     matcher: '/store/appointments',
     method: 'POST',
-    middlewares: [validateAndTransformBody(PostStoreAppointment)],
+    middlewares: [upload.array('files'), validateAndTransformBody(PostStoreAppointment)],
   },
   {
     matcher: '/admin/appointments',
@@ -183,5 +187,22 @@ export default defineMiddlewares([
     matcher: '/admin/social-media/:id',
     method: 'POST',
     middlewares: [validateAndTransformBody(PostAdminSocialMediaUpdateSchema)],
+  },
+  {
+    matcher: '/admin/rfq',
+    method: 'GET',
+    middlewares: [
+      validateAndTransformQuery(GetAdminRfqsParams, listRfqsQueryConfig),
+    ],
+  },
+  {
+    matcher: '/admin/rfq/:id',
+    method: 'PATCH',
+    middlewares: [validateAndTransformBody(PatchAdminRfq)],
+  },
+  {
+    matcher: '/admin/rfq/:id/comments',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminRfqComment)],
   },
 ]);

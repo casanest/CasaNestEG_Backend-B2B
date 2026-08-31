@@ -3,16 +3,30 @@ import {
   MedusaResponse,
 } from '@medusajs/framework';
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
+import type { GetAdminRfqsParamsType } from './validators';
 
 export async function GET(
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse,
 ): Promise<void> {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
-  
-  const limit = Number(req.query.limit) || 20
-  const offset = Number(req.query.offset) || 0
-  
+
+  const { limit, offset, status, from, to, sort_by, sort_order } =
+    req.validatedQuery as unknown as GetAdminRfqsParamsType;
+
+  const filters: Record<string, unknown> = {};
+
+  if (status) {
+    filters.status = status;
+  }
+
+  if (from || to) {
+    filters.created_at = {
+      ...(from ? { $gte: from } : {}),
+      ...(to ? { $lte: to } : {}),
+    };
+  }
+
   const { data: rfqs, metadata } = await query.graph({
     entity: 'rfq',
     fields: [
@@ -25,9 +39,13 @@ export async function GET(
       'status',
       'created_at',
     ],
+    filters,
     pagination: {
       take: limit,
       skip: offset,
+      order: {
+        [sort_by]: sort_order,
+      },
     },
   });
   

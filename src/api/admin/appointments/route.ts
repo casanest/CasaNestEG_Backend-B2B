@@ -11,10 +11,14 @@ export async function GET(
 ): Promise<void> {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
 
-  const { limit, offset, from, to, date_field } =
+  const { limit, offset, status, from, to, date_field, sort_by, sort_order } =
     req.validatedQuery as unknown as GetAdminAppointmentsParamsType;
 
   const filters: Record<string, unknown> = {};
+
+  if (status) {
+    filters.status = status;
+  }
 
   if (from || to) {
     filters[date_field] = {
@@ -30,6 +34,8 @@ export async function GET(
       'customer_name',
       'customer_email',
       'customer_phone',
+      'company_name',
+      'subject',
       'status',
       'created_at',
       'appointment_date',
@@ -39,7 +45,7 @@ export async function GET(
       take: limit,
       skip: offset,
       order: {
-        created_at: 'DESC',
+        [sort_by]: sort_order,
       },
     },
   });

@@ -1,6 +1,7 @@
-import { Container, Heading, Text, Button, Table } from "@medusajs/ui"
-import { useRfq, useRfqAttachments } from "../../../hooks/api/rfq"
+import { Container, Heading, Text, Button, Table, Select, Textarea, toast } from "@medusajs/ui"
+import { useRfq, useRfqAttachments, useUpdateRfq, useRfqComments, useCreateRfqComment } from "../../../hooks/api/rfq"
 import { useParams, useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
 
 interface RfqItem {
   product_id: string
@@ -27,11 +28,45 @@ interface Rfq {
   items: RfqItem[]
 }
 
+const STATUS_OPTIONS = ["pending", "quoted", "closed", "done"]
+
 const RfqDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data, isLoading, error } = useRfq(id || '')
   const { data: attData, isLoading: attLoading } = useRfqAttachments(id || '')
+  const { data: commentsData, isLoading: commentsLoading } = useRfqComments(id || '')
+  const { mutateAsync: updateRfq, isPending: isUpdating } = useUpdateRfq(id || '')
+  const { mutateAsync: createComment, isPending: isCommenting } = useCreateRfqComment(id || '')
+
+  const [status, setStatus] = useState<string>("pending")
+  const [commentBody, setCommentBody] = useState<string>("")
+
+  useEffect(() => {
+    if (data?.rfq) {
+      setStatus(data.rfq.status)
+    }
+  }, [data])
+
+  const handleSaveStatus = async () => {
+    try {
+      await updateRfq({ status: status as any })
+      toast.success("RFQ status updated")
+    } catch {
+      toast.error("Failed to update RFQ status")
+    }
+  }
+
+  const handleAddComment = async () => {
+    if (!commentBody.trim()) return
+    try {
+      await createComment({ body: commentBody })
+      setCommentBody("")
+      toast.success("Comment added")
+    } catch {
+      toast.error("Failed to add comment")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -61,6 +96,8 @@ const RfqDetailPage = () => {
         return 'bg-blue-500'
       case 'closed':
         return 'bg-green-500'
+      case 'done':
+        return 'bg-purple-500'
       default:
         return 'bg-gray-500'
     }
@@ -204,6 +241,77 @@ const RfqDetailPage = () => {
           ) : (
             <Text className="text-ui-fg-subtle">No attachments included.</Text>
           )}
+        </div>
+
+        {/* Manage RFQ Block */}
+        <div className="border rounded-lg p-4">
+          <Heading level="h2" className="mb-3">Manage RFQ</Heading>
+          <div className="space-y-4">
+            <div>
+              <Text className="font-medium mb-1">Status</Text>
+              <Select value={status} onValueChange={setStatus}>
+                <Select.Trigger>
+                  <Select.Value placeholder="Select a status" />
+                </Select.Trigger>
+                <Select.Content>
+                  {STATUS_OPTIONS.map((option) => (
+                    <Select.Item key={option} value={option}>
+                      {option}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleSaveStatus} isLoading={isUpdating}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Comments Block */}
+        <div className="border rounded-lg p-4">
+          <Heading level="h2" className="mb-3">Comments</Heading>
+          {commentsLoading ? (
+            <Text className="text-ui-fg-subtle">Loading comments...</Text>
+          ) : commentsData?.comments && commentsData.comments.length > 0 ? (
+            <div className="space-y-3 mb-4">
+              {commentsData.comments.map((comment: any) => (
+                <div key={comment.id} className="border-b last:border-0 pb-3 last:pb-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Text className="font-medium text-sm">{comment.author || 'Admin'}</Text>
+                    <Text className="text-xs text-ui-fg-subtle">
+                      {new Date(comment.created_at).toLocaleString()}
+                    </Text>
+                  </div>
+                  <Text className="text-sm whitespace-pre-wrap">{comment.body}</Text>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Text className="text-ui-fg-subtle mb-4">No comments yet.</Text>
+          )}
+
+          <div className="space-y-2">
+            <Textarea
+              value={commentBody}
+              onChange={(e) => setCommentBody(e.target.value)}
+              placeholder="Add an internal comment..."
+              rows={3}
+            />
+            <div className="flex justify-end">
+              <Button
+                size="small"
+                onClick={handleAddComment}
+                isLoading={isCommenting}
+                disabled={!commentBody.trim()}
+              >
+                Add Comment
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </Container>

@@ -3,6 +3,9 @@ import {
   MedusaResponse,
 } from '@medusajs/framework';
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
+import { RFQ_MODULE } from '../../../../modules/rfq';
+import type RfqModuleService from '../../../../modules/rfq/service';
+import type { PatchAdminRfqType } from './validators';
 
 export async function GET(
   req: AuthenticatedMedusaRequest,
@@ -93,4 +96,27 @@ export async function GET(
   });
   
   res.json({ rfq: { ...rfq, items: itemsWithVariants } });
+}
+
+export async function PATCH(
+  req: AuthenticatedMedusaRequest<PatchAdminRfqType>,
+  res: MedusaResponse,
+): Promise<void> {
+  const { id } = req.params;
+
+  const service: RfqModuleService = req.scope.resolve(RFQ_MODULE);
+
+  const existing = await service.listRfqs({ id });
+
+  if (!existing.length) {
+    res.status(404).json({ message: 'RFQ not found' });
+    return;
+  }
+
+  const rfq = await service.updateRfqs({
+    id,
+    ...req.validatedBody,
+  });
+
+  res.json({ rfq });
 }

@@ -3,6 +3,8 @@ export const defaultAdminAppointmentFields = [
   'customer_name',
   'customer_email',
   'customer_phone',
+  'company_name',
+  'subject',
   'status',
   'created_at',
   'appointment_date'

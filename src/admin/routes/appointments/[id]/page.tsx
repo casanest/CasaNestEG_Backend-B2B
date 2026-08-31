@@ -1,5 +1,5 @@
 import { Container, Heading, Text, Button, Select, Textarea, Input, toast } from "@medusajs/ui"
-import { useAppointment, useUpdateAppointment } from "../../../hooks/api/appointments"
+import { useAppointment, useAppointmentAttachments, useUpdateAppointment } from "../../../hooks/api/appointments"
 import { useParams, useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 
@@ -9,6 +9,8 @@ interface Appointment {
   customer_email: string
   customer_phone: string
   customer_address: string | null
+  company_name: string | null
+  subject: string | null
   notes: string | null
   status: string
   admin_notes: string | null
@@ -56,6 +58,7 @@ const AppointmentDetailPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data, isLoading, error } = useAppointment(id || '')
+  const { data: attData, isLoading: attLoading } = useAppointmentAttachments(id || '')
   const { mutateAsync, isPending } = useUpdateAppointment(id || '')
 
   const [status, setStatus] = useState<string>("pending")
@@ -148,6 +151,14 @@ const AppointmentDetailPage = () => {
               <Text className="font-medium">Address:</Text>
               <Text className="ml-2">{appointment.customer_address || '-'}</Text>
             </div>
+            <div>
+              <Text className="font-medium">Company:</Text>
+              <Text className="ml-2">{appointment.company_name || '-'}</Text>
+            </div>
+            <div>
+              <Text className="font-medium">Subject:</Text>
+              <Text className="ml-2">{appointment.subject || '-'}</Text>
+            </div>
           </div>
         </div>
 
@@ -155,6 +166,30 @@ const AppointmentDetailPage = () => {
         <div className="border rounded-lg p-4">
           <Heading level="h2" className="mb-3">Customer Notes</Heading>
           <Text className="whitespace-pre-wrap">{appointment.notes || '-'}</Text>
+        </div>
+
+        {/* Attachments Block */}
+        <div className="border rounded-lg p-4">
+          <Heading level="h2" className="mb-3">Attachments</Heading>
+          {attLoading ? (
+            <Text className="text-ui-fg-subtle">Loading attachments...</Text>
+          ) : attData?.attachments && attData.attachments.length > 0 ? (
+            <div className="space-y-3">
+              {attData.attachments.map((att: any) => (
+                <div key={att.id} className="flex items-center justify-between border-b last:border-0 pb-2 last:pb-0">
+                  <div className="flex flex-col">
+                    <Text className="font-medium">{att.file_name}</Text>
+                    <Text className="text-xs text-ui-fg-subtle">{(att.size / 1024).toFixed(1)} KB - {att.mime_type}</Text>
+                  </div>
+                  <Button variant="secondary" size="small" onClick={() => window.open(att.url, '_blank')}>
+                    View / Download
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Text className="text-ui-fg-subtle">No attachments included.</Text>
+          )}
         </div>
 
         {/* Management Block */}

@@ -5,6 +5,8 @@ export const PostStoreAppointment = z.object({
   customer_email: z.string().email(),
   customer_phone: z.string().min(1),
   customer_address: z.string().optional(),
+  company_name: z.string().optional(),
+  subject: z.string().optional(),
   notes: z.string().optional(),
 })
 

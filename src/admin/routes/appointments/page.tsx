@@ -1,6 +1,6 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { Button, Container, Heading, Input, Select, Table, Text } from "@medusajs/ui"
-import { useAppointments, type AppointmentDateField } from "../../hooks/api/appointments"
+import { useAppointments, type AppointmentDateField, type AppointmentStatus, type AppointmentSortBy, type AppointmentSortOrder } from "../../hooks/api/appointments"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -9,14 +9,35 @@ interface Appointment {
   customer_name: string
   customer_email: string
   customer_phone: string
+  company_name: string | null
+  subject: string | null
   status: string
   created_at: string
   appointment_date: string | null
 }
 
+const STATUS_OPTIONS: { value: AppointmentStatus; label: string }[] = [
+  { value: "pending", label: "Pending" },
+  { value: "contacted", label: "Contacted" },
+  { value: "scheduled", label: "Scheduled" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+]
+
 const DATE_FIELD_OPTIONS: { value: AppointmentDateField; label: string }[] = [
   { value: "created_at", label: "Request date" },
   { value: "appointment_date", label: "Scheduled date" },
+]
+
+const SORT_BY_OPTIONS: { value: AppointmentSortBy; label: string }[] = [
+  { value: "customer_name", label: "Name" },
+  { value: "created_at", label: "Date" },
+  { value: "status", label: "State" },
+]
+
+const SORT_ORDER_OPTIONS: { value: AppointmentSortOrder; label: string }[] = [
+  { value: "asc", label: "Ascending" },
+  { value: "desc", label: "Descending" },
 ]
 
 const getStatusColor = (status: string) => {
@@ -42,15 +63,21 @@ const AppointmentsPage = () => {
   const navigate = useNavigate()
   const [limit] = useState(PAGE_SIZE)
   const [offset, setOffset] = useState(0)
+  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [dateField, setDateField] = useState<AppointmentDateField>("created_at")
   const [from, setFrom] = useState("")
   const [to, setTo] = useState("")
+  const [sortBy, setSortBy] = useState<AppointmentSortBy>("created_at")
+  const [sortOrder, setSortOrder] = useState<AppointmentSortOrder>("desc")
   const { data, isLoading, error } = useAppointments({
     limit,
     offset,
+    status: (statusFilter !== "all" ? statusFilter : undefined) as AppointmentStatus | undefined,
     from: from || undefined,
     to: to || undefined,
     date_field: dateField,
+    sort_by: sortBy,
+    sort_order: sortOrder,
   })
 
   const count: number = data?.count ?? 0
@@ -65,6 +92,11 @@ const AppointmentsPage = () => {
   }
 
   // changing a filter invalidates the current page, so go back to the first one
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value)
+    setOffset(0)
+  }
+
   const handleDateFieldChange = (value: AppointmentDateField) => {
     setDateField(value)
     setOffset(0)
@@ -80,15 +112,52 @@ const AppointmentsPage = () => {
     setOffset(0)
   }
 
+  const handleSortByChange = (value: AppointmentSortBy) => {
+    setSortBy(value)
+    setOffset(0)
+  }
+
+  const handleSortOrderChange = (value: AppointmentSortOrder) => {
+    setSortOrder(value)
+    setOffset(0)
+  }
+
+  const handleToday = () => {
+    const today = new Date().toISOString().slice(0, 10)
+    setFrom(today)
+    setTo(today)
+    setOffset(0)
+  }
+
   const handleClear = () => {
     setFrom("")
     setTo("")
+    setStatusFilter("all")
     setDateField("created_at")
+    setSortBy("created_at")
+    setSortOrder("desc")
     setOffset(0)
   }
 
   const filters = (
     <div className="mt-4 flex flex-wrap items-end gap-3">
+      <div>
+        <Text className="font-medium mb-1">Status</Text>
+        <Select value={statusFilter} onValueChange={handleStatusChange}>
+          <Select.Trigger>
+            <Select.Value placeholder="All" />
+          </Select.Trigger>
+          <Select.Content>
+            <Select.Item value="all">All</Select.Item>
+            {STATUS_OPTIONS.map((option) => (
+              <Select.Item key={option.value} value={option.value}>
+                {option.label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select>
+      </div>
+
       <div>
         <Text className="font-medium mb-1">Filter by</Text>
         <Select
@@ -127,6 +196,42 @@ const AppointmentsPage = () => {
           onChange={(e) => handleToChange(e.target.value)}
         />
       </div>
+
+      <div>
+        <Text className="font-medium mb-1">Sort by</Text>
+        <Select value={sortBy} onValueChange={(v) => handleSortByChange(v as AppointmentSortBy)}>
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Content>
+            {SORT_BY_OPTIONS.map((option) => (
+              <Select.Item key={option.value} value={option.value}>
+                {option.label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select>
+      </div>
+
+      <div>
+        <Text className="font-medium mb-1">Order</Text>
+        <Select value={sortOrder} onValueChange={(v) => handleSortOrderChange(v as AppointmentSortOrder)}>
+          <Select.Trigger>
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Content>
+            {SORT_ORDER_OPTIONS.map((option) => (
+              <Select.Item key={option.value} value={option.value}>
+                {option.label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select>
+      </div>
+
+      <Button variant="secondary" onClick={handleToday}>
+        Today
+      </Button>
 
       <Button variant="secondary" onClick={handleClear}>
         Clear
@@ -171,6 +276,8 @@ const AppointmentsPage = () => {
           <Table.Header>
             <Table.Row>
               <Table.HeaderCell>Customer</Table.HeaderCell>
+              <Table.HeaderCell>Company</Table.HeaderCell>
+              <Table.HeaderCell>Subject</Table.HeaderCell>
               <Table.HeaderCell>Email</Table.HeaderCell>
               <Table.HeaderCell>Phone</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
@@ -186,6 +293,8 @@ const AppointmentsPage = () => {
                 onClick={() => navigate(`/appointments/${appointment.id}`)}
               >
                 <Table.Cell>{appointment.customer_name}</Table.Cell>
+                <Table.Cell>{appointment.company_name || '-'}</Table.Cell>
+                <Table.Cell>{appointment.subject || '-'}</Table.Cell>
                 <Table.Cell>{appointment.customer_email}</Table.Cell>
                 <Table.Cell>{appointment.customer_phone}</Table.Cell>
                 <Table.Cell>

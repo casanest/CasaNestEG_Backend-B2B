@@ -36,10 +36,15 @@ export const GetAdminAppointmentsParams = createFindParams({
   .merge(
     z.object({
       date_field: z.enum(['created_at', 'appointment_date']).default('created_at'),
+      status: z.enum(['pending', 'contacted', 'scheduled', 'completed', 'cancelled']).optional(),
       // minutes behind UTC, as reported by Date#getTimezoneOffset()
       tz_offset: z.coerce.number().int().min(-840).max(840).default(0),
       from: dateBound(false),
-      to: dateBound(true)
+      to: dateBound(true),
+      sort_by: z
+        .enum(['customer_name', 'created_at', 'status'])
+        .default('created_at'),
+      sort_order: z.enum(['asc', 'desc']).default('desc'),
     })
   )
   .transform((params) => ({

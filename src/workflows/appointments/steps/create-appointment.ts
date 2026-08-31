@@ -7,6 +7,8 @@ type Input = {
   customer_email: string
   customer_phone: string
   customer_address?: string
+  company_name?: string
+  subject?: string
   notes?: string
 }
 

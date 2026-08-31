@@ -6,6 +6,8 @@ const Appointment = model.define("appointment", {
   customer_email: model.text(),
   customer_phone: model.text(),
   customer_address: model.text().nullable(),
+  company_name: model.text().nullable(),
+  subject: model.text().nullable(),
   notes: model.text().nullable(),
   status: model
     .enum(["pending", "contacted", "scheduled", "completed", "cancelled"])
