@@ -1,13 +1,39 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { Button, Container, Heading, Table, IconButton, toast, StatusBadge } from "@medusajs/ui"
+import { Button, Container, Heading, Table, IconButton, toast, StatusBadge, Switch } from "@medusajs/ui"
 import { usePackages, useDeletePackage, type Package } from "../../hooks/api/packages"
 import { useNavigate } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 import { PencilSquare, Trash, PlusMini } from "@medusajs/icons"
 
 const PackagesListPage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data, isLoading, error } = usePackages()
   const deletePackage = useDeletePackage()
+
+  const handleToggleHomepage = async (pkg: Package) => {
+    const newValue = !pkg.is_in_homepage
+    try {
+      const response = await fetch(`/admin/packages/${pkg.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_in_homepage: newValue }),
+      })
+      if (!response.ok) throw new Error("Failed to update package")
+      toast.success(`Package ${newValue ? "added to" : "removed from"} homepage`)
+      queryClient.setQueryData(["packages"], (old: any) => {
+        if (!old) return old
+        return {
+          ...old,
+          packages: old.packages.map((p: Package) =>
+            p.id === pkg.id ? { ...p, is_in_homepage: newValue } : p
+          ),
+        }
+      })
+    } catch (e) {
+      toast.error("Failed to update package")
+    }
+  }
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this package and all its titles?")) return
@@ -55,6 +81,7 @@ const PackagesListPage = () => {
               <Table.HeaderCell>Name (AR)</Table.HeaderCell>
               <Table.HeaderCell>Slug</Table.HeaderCell>
               <Table.HeaderCell>Published</Table.HeaderCell>
+              <Table.HeaderCell>Homepage</Table.HeaderCell>
               <Table.HeaderCell>Titles</Table.HeaderCell>
               <Table.HeaderCell>Actions</Table.HeaderCell>
             </Table.Row>
@@ -84,6 +111,12 @@ const PackagesListPage = () => {
                   <StatusBadge color={pkg.is_published ? "green" : "grey"}>
                     {pkg.is_published ? "Published" : "Draft"}
                   </StatusBadge>
+                </Table.Cell>
+                <Table.Cell onClick={(e) => e.stopPropagation()}>
+                  <Switch
+                    checked={pkg.is_in_homepage}
+                    onCheckedChange={() => handleToggleHomepage(pkg)}
+                  />
                 </Table.Cell>
                 <Table.Cell>{pkg.titles_count ?? 0}</Table.Cell>
                 <Table.Cell onClick={(e) => e.stopPropagation()}>

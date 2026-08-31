@@ -9,6 +9,7 @@ export type Package = {
   description_ar: string | null
   image_url: string | null
   is_published: boolean
+  is_in_homepage: boolean
   created_at: string
   updated_at: string
   titles_count?: number
@@ -45,6 +46,7 @@ export type CreatePackageInput = {
   description_ar?: string | null
   image_url?: string | null
   is_published?: boolean
+  is_in_homepage?: boolean
 }
 
 export type UpdatePackageInput = Partial<CreatePackageInput> & { id: string }

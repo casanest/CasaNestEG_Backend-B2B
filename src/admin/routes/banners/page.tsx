@@ -2,10 +2,12 @@ import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { Button, Container, Heading, Table, IconButton, toast, StatusBadge, Switch } from "@medusajs/ui"
 import { useBanners, useDeleteBanner, type Banner } from "../../hooks/api/banners"
 import { useNavigate } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 import { PencilSquare, Trash, PlusMini } from "@medusajs/icons"
 
 const BannersListPage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data, isLoading, error } = useBanners()
   const deleteBanner = useDeleteBanner()
 
@@ -20,14 +22,24 @@ const BannersListPage = () => {
   }
 
   const handleToggleActive = async (banner: Banner) => {
+    const newValue = !banner.is_active
     try {
       const response = await fetch(`/admin/banners/${banner.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_active: !banner.is_active }),
+        body: JSON.stringify({ is_active: newValue }),
       })
       if (!response.ok) throw new Error("Failed to update banner")
-      toast.success(`Banner ${!banner.is_active ? "activated" : "deactivated"}`)
+      toast.success(`Banner ${newValue ? "activated" : "deactivated"}`)
+      queryClient.setQueryData(["banners"], (old: any) => {
+        if (!old) return old
+        return {
+          ...old,
+          banners: old.banners.map((b: Banner) =>
+            b.id === banner.id ? { ...b, is_active: newValue } : b
+          ),
+        }
+      })
     } catch (e) {
       toast.error("Failed to update banner")
     }

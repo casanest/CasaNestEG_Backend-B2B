@@ -13,6 +13,7 @@ type UpdateTestimonialStepInput = {
   position_ar?: string
   display_order?: number
   is_published?: boolean
+  is_in_homepage?: boolean
 }
 
 export const updateTestimonialStep = createStep(
@@ -34,6 +35,7 @@ export const updateTestimonialStep = createStep(
     if (input.position_ar !== undefined) updateData.position_ar = input.position_ar
     if (input.display_order !== undefined) updateData.display_order = input.display_order
     if (input.is_published !== undefined) updateData.is_published = input.is_published
+    if (input.is_in_homepage !== undefined) updateData.is_in_homepage = input.is_in_homepage
 
     const updated = await testimonialModule.updateTestimonials(updateData)
 
@@ -55,6 +57,7 @@ export const updateTestimonialStep = createStep(
       position_ar: compensationData.original.position_ar,
       display_order: compensationData.original.display_order,
       is_published: compensationData.original.is_published,
+      is_in_homepage: compensationData.original.is_in_homepage,
     })
   }
 )

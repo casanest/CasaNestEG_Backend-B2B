@@ -25,6 +25,7 @@ export async function GET(
       "position_ar",
       "display_order",
       "is_published",
+      "is_in_homepage",
       "created_at",
       "updated_at",
     ],

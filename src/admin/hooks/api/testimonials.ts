@@ -11,6 +11,7 @@ export type Testimonial = {
   position_ar: string
   display_order: number
   is_published: boolean
+  is_in_homepage: boolean
   created_at: string
   updated_at: string
 }
@@ -25,6 +26,7 @@ export type CreateTestimonialInput = {
   position_ar: string
   display_order?: number
   is_published?: boolean
+  is_in_homepage?: boolean
 }
 
 export type UpdateTestimonialInput = Partial<CreateTestimonialInput> & { id: string }

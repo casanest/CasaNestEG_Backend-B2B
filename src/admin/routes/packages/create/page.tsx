@@ -1,4 +1,4 @@
-import { Container, Heading, Input, Textarea, Text, Button, Checkbox, Label, toast } from "@medusajs/ui"
+import { Container, Heading, Input, Textarea, Text, Button, Checkbox, Label, Switch, toast } from "@medusajs/ui"
 import { useCreatePackage } from "../../../hooks/api/packages"
 import { uploadFile } from "../../../lib/upload"
 import { useNavigate } from "react-router-dom"
@@ -15,6 +15,7 @@ const CreatePackagePage = () => {
   const [slug, setSlug] = useState("")
   const [slugTouched, setSlugTouched] = useState(false)
   const [isPublished, setIsPublished] = useState(false)
+  const [isInHomepage, setIsInHomepage] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -58,6 +59,7 @@ const CreatePackagePage = () => {
         description_ar: descriptionAr || null,
         image_url: imageUrl,
         is_published: isPublished,
+        is_in_homepage: isInHomepage,
       })
       toast.success("Package created")
       navigate(`/packages/${result.package.id}`)
@@ -162,6 +164,17 @@ const CreatePackagePage = () => {
           />
           <Label htmlFor="is_published" size="small">
             Published (visible on storefront)
+          </Label>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            id="is_in_homepage"
+            checked={isInHomepage}
+            onCheckedChange={(val) => setIsInHomepage(val as boolean)}
+          />
+          <Label htmlFor="is_in_homepage" size="small">
+            Show on homepage
           </Label>
         </div>
 

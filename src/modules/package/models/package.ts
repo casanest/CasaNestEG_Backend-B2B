@@ -10,6 +10,7 @@ const Package = model.define("package", {
   description_ar: model.text().nullable(),
   image_url: model.text().nullable(),
   is_published: model.boolean().default(false),
+  is_in_homepage: model.boolean().default(false),
   titles: model.hasMany(() => PackageTitle, {
     mappedBy: "package",
   }),

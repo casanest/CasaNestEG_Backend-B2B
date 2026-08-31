@@ -1,4 +1,4 @@
-import { Container, Heading, Input, Textarea, Text, Button, Checkbox, Label, toast } from "@medusajs/ui"
+import { Container, Heading, Input, Textarea, Text, Button, Checkbox, Label, Switch, toast } from "@medusajs/ui"
 import {
   useTestimonial,
   useUpdateTestimonial,
@@ -24,6 +24,7 @@ const TestimonialDetailPage = () => {
   const [positionAr, setPositionAr] = useState("")
   const [displayOrder, setDisplayOrder] = useState(0)
   const [isPublished, setIsPublished] = useState(false)
+  const [isInHomepage, setIsInHomepage] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -38,6 +39,7 @@ const TestimonialDetailPage = () => {
       setPositionAr(t.position_ar)
       setDisplayOrder(t.display_order)
       setIsPublished(t.is_published)
+      setIsInHomepage(t.is_in_homepage)
       setImageUrl(t.image_url)
     }
   }, [data])
@@ -71,6 +73,7 @@ const TestimonialDetailPage = () => {
         position_ar: positionAr,
         display_order: displayOrder,
         is_published: isPublished,
+        is_in_homepage: isInHomepage,
       })
       toast.success("Testimonial updated")
     } catch (e) {
@@ -186,6 +189,17 @@ const TestimonialDetailPage = () => {
           />
           <Label htmlFor="is_published" size="small">
             Published (visible on storefront)
+          </Label>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            id="is_in_homepage"
+            checked={isInHomepage}
+            onCheckedChange={(val) => setIsInHomepage(val as boolean)}
+          />
+          <Label htmlFor="is_in_homepage" size="small">
+            Show on homepage
           </Label>
         </div>
 

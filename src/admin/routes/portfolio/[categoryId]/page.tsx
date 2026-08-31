@@ -1,14 +1,40 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { Button, Container, Heading, Table, Text, IconButton, toast } from "@medusajs/ui"
+import { Button, Container, Heading, Table, Text, IconButton, toast, Switch } from "@medusajs/ui"
 import { usePortfolioProjects, useDeleteProject, type PortfolioProject } from "../../../hooks/api/portfolio"
 import { useParams, useNavigate } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 import { Trash, PencilSquare, ArrowLeft } from "@medusajs/icons"
 
 const ProjectsListPage = () => {
   const { categoryId } = useParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { data, isLoading, error } = usePortfolioProjects(categoryId || "")
   const deleteProject = useDeleteProject()
+
+  const handleToggleHomepage = async (project: PortfolioProject) => {
+    const newValue = !project.is_in_homepage
+    try {
+      const response = await fetch(`/admin/portfolio/projects/${project.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_in_homepage: newValue }),
+      })
+      if (!response.ok) throw new Error("Failed to update project")
+      toast.success(`Project ${newValue ? "added to" : "removed from"} homepage`)
+      queryClient.setQueryData(["portfolio-projects", categoryId], (old: any) => {
+        if (!old) return old
+        return {
+          ...old,
+          projects: old.projects.map((p: PortfolioProject) =>
+            p.id === project.id ? { ...p, is_in_homepage: newValue } : p
+          ),
+        }
+      })
+    } catch (e) {
+      toast.error("Failed to update project")
+    }
+  }
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this project?")) return
@@ -102,14 +128,11 @@ const ProjectsListPage = () => {
                 <Table.Cell dir="rtl">{project.title_ar}</Table.Cell>
                 <Table.Cell>{project.location_en}</Table.Cell>
                 <Table.Cell>{formatDate(project.project_date)}</Table.Cell>
-                <Table.Cell>
-                  {project.is_in_homepage ? (
-                    <span className="inline-block rounded bg-ui-tag-green-bg px-2 py-1 text-ui-tag-green-text text-xs">
-                      Yes
-                    </span>
-                  ) : (
-                    <span className="text-ui-fg-subtle">No</span>
-                  )}
+                <Table.Cell onClick={(e) => e.stopPropagation()}>
+                  <Switch
+                    checked={project.is_in_homepage}
+                    onCheckedChange={() => handleToggleHomepage(project)}
+                  />
                 </Table.Cell>
                 <Table.Cell onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">

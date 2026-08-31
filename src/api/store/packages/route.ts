@@ -10,6 +10,12 @@ export async function GET(
 ) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
+  const homepageParam = (req as any).query?.homepage
+  const filters: Record<string, any> = { is_published: true }
+  if (homepageParam === "true") {
+    filters.is_in_homepage = true
+  }
+
   const { data: packages } = await query.graph({
     entity: "package",
     fields: [
@@ -20,10 +26,11 @@ export async function GET(
       "description_en",
       "description_ar",
       "image_url",
+      "is_in_homepage",
       "titles.products.id",
       "titles.products.status",
     ],
-    filters: { is_published: true },
+    filters,
     pagination: {
       order: { created_at: "DESC" },
     },

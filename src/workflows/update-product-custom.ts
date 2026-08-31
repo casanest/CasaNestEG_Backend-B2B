@@ -11,6 +11,7 @@ type UpdateProductCustomWorkflowInput = {
   product_id: string
   document_url?: string | null
   moq?: number
+  is_in_homepage?: boolean
 }
 
 export const updateProductCustomWorkflow = createWorkflow(

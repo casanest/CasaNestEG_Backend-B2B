@@ -119,6 +119,7 @@ const attachProductCustomFields = async (
 
           body.product.document_url = custom?.document_url ?? null
           body.product.moq = custom?.moq ?? 1
+          body.product.is_in_homepage = custom?.is_in_homepage ?? false
 
           const categories = body.product.categories ?? []
           body.product.related_products = await fetchRelatedProducts(
@@ -146,10 +147,16 @@ const attachProductCustomFields = async (
             const custom = customMap.get(product.id)
             product.document_url = custom?.document_url ?? null
             product.moq = custom?.moq ?? 1
+            product.is_in_homepage = custom?.is_in_homepage ?? false
+          }
+
+          const reqQuery = (req as any).validatedQuery || (req as any).query || {}
+          if (reqQuery.homepage === "true") {
+            body.products = body.products.filter((p: any) => p.is_in_homepage === true)
+            body.count = body.products.length
           }
 
           // If this is a single-product fetch (via handle filter), attach related products
-          const reqQuery = (req as any).validatedQuery || (req as any).query || {}
           if (reqQuery.handle && body.products.length === 1) {
             const p = body.products[0]
             const categories = p.categories ?? []

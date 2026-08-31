@@ -9,7 +9,7 @@ export async function GET(
   res: MedusaResponse
 ) {
   const { slug } = req.params
-  const { page = "1", limit = "12" } = req.query as { page?: string; limit?: string }
+  const { page = "1", limit = "12", homepage } = req.query as { page?: string; limit?: string; homepage?: string }
 
   const pageNum = Math.max(1, parseInt(page) || 1)
   const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 12))
@@ -29,6 +29,11 @@ export async function GET(
 
   const category = categories[0]
 
+  const projectFilters: Record<string, any> = { category_id: category.id }
+  if (homepage === "true") {
+    projectFilters.is_in_homepage = true
+  }
+
   const { data: projects, metadata } = await query.graph({
     entity: "project",
     fields: [
@@ -42,7 +47,7 @@ export async function GET(
       "project_date",
       "is_in_homepage",
     ],
-    filters: { category_id: category.id },
+    filters: projectFilters,
     pagination: {
       take: limitNum,
       skip: offset,

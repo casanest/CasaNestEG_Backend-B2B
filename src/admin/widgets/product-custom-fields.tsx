@@ -1,5 +1,5 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
-import { Container, Heading, Label, Input, Button, toast } from "@medusajs/ui"
+import { Container, Heading, Label, Input, Button, Switch, toast } from "@medusajs/ui"
 import { Save, Upload, Trash, FileText, ExternalLink } from "lucide-react"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { DetailWidgetProps, AdminProduct } from "@medusajs/framework/types"
@@ -9,6 +9,7 @@ const ProductCustomFieldsWidget = ({
 }: DetailWidgetProps<AdminProduct>) => {
   const [moq, setMoq] = useState<number>(1)
   const [documentUrl, setDocumentUrl] = useState<string>("")
+  const [isInHomepage, setIsInHomepage] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -28,6 +29,7 @@ const ProductCustomFieldsWidget = ({
 
       setMoq(result.product_custom?.moq ?? 1)
       setDocumentUrl(result.product_custom?.document_url ?? "")
+      setIsInHomepage(result.product_custom?.is_in_homepage ?? false)
     } catch (error) {
       console.error("Error loading custom fields:", error)
     } finally {
@@ -110,6 +112,37 @@ const ProductCustomFieldsWidget = ({
     })
   }
 
+  const handleToggleHomepage = useCallback(async (newValue: boolean) => {
+    setIsInHomepage(newValue)
+    try {
+      const response = await fetch(`/admin/products/${data.id}/custom`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          moq,
+          document_url: documentUrl || null,
+          is_in_homepage: newValue,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Save failed: ${response.status}`)
+      }
+
+      const result = await response.json()
+      setIsInHomepage(result.product_custom?.is_in_homepage ?? newValue)
+
+      toast.success(`Product ${newValue ? "added to" : "removed from"} homepage`)
+    } catch (error) {
+      console.error("Error toggling homepage:", error)
+      toast.error("Failed to update homepage status")
+      setIsInHomepage(!newValue)
+    }
+  }, [data.id, moq, documentUrl])
+
   const handleSave = useCallback(async () => {
     setIsSaving(true)
     try {
@@ -122,6 +155,7 @@ const ProductCustomFieldsWidget = ({
         body: JSON.stringify({
           moq,
           document_url: documentUrl || null,
+          is_in_homepage: isInHomepage,
         }),
       })
 
@@ -134,6 +168,7 @@ const ProductCustomFieldsWidget = ({
 
       setMoq(result.product_custom?.moq ?? moq)
       setDocumentUrl(result.product_custom?.document_url ?? "")
+      setIsInHomepage(result.product_custom?.is_in_homepage ?? false)
 
       toast.success("Success", {
         description: "Custom fields saved successfully",
@@ -148,7 +183,7 @@ const ProductCustomFieldsWidget = ({
     } finally {
       setIsSaving(false)
     }
-  }, [data.id, moq, documentUrl])
+  }, [data.id, moq, documentUrl, isInHomepage])
 
   if (isLoading) {
     return (
@@ -223,6 +258,17 @@ const ProductCustomFieldsWidget = ({
             {!isUploading && <Upload className="w-4 h-4 mr-2" />}
             {isUploading ? "Uploading..." : "Upload Document"}
           </Button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            id="is_in_homepage"
+            checked={isInHomepage}
+            onCheckedChange={(val) => handleToggleHomepage(val as boolean)}
+          />
+          <Label htmlFor="is_in_homepage" size="small">
+            Show on homepage
+          </Label>
         </div>
 
         <div className="flex justify-end">

@@ -13,6 +13,7 @@ type UpdatePackageWorkflowInput = {
   description_ar?: string | null
   image_url?: string | null
   is_published?: boolean
+  is_in_homepage?: boolean
 }
 
 export const updatePackageWorkflow = createWorkflow(

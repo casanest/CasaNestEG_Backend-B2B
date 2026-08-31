@@ -1,4 +1,4 @@
-import { Container, Heading, Input, Textarea, Text, Button, Checkbox, Label, Table, IconButton, toast, Drawer } from "@medusajs/ui"
+import { Container, Heading, Input, Textarea, Text, Button, Checkbox, Label, Table, IconButton, toast, Drawer, Switch } from "@medusajs/ui"
 import {
   usePackage,
   useUpdatePackage,
@@ -29,6 +29,7 @@ const PackageDetailPage = () => {
   const [descriptionAr, setDescriptionAr] = useState("")
   const [slug, setSlug] = useState("")
   const [isPublished, setIsPublished] = useState(false)
+  const [isInHomepage, setIsInHomepage] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -44,6 +45,7 @@ const PackageDetailPage = () => {
       setDescriptionAr(pkg.description_ar ?? "")
       setSlug(pkg.slug)
       setIsPublished(pkg.is_published)
+      setIsInHomepage(pkg.is_in_homepage)
       setImageUrl(pkg.image_url)
     }
   }, [data])
@@ -75,6 +77,7 @@ const PackageDetailPage = () => {
         description_ar: descriptionAr || null,
         image_url: imageUrl,
         is_published: isPublished,
+        is_in_homepage: isInHomepage,
       })
       toast.success("Package updated")
     } catch (e) {
@@ -217,6 +220,17 @@ const PackageDetailPage = () => {
           />
           <Label htmlFor="is_published" size="small">
             Published (visible on storefront)
+          </Label>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            id="is_in_homepage"
+            checked={isInHomepage}
+            onCheckedChange={(val) => setIsInHomepage(val as boolean)}
+          />
+          <Label htmlFor="is_in_homepage" size="small">
+            Show on homepage
           </Label>
         </div>
 

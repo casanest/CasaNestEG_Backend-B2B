@@ -6,6 +6,7 @@ type UpdateProductCustomStepInput = {
   product_id: string
   document_url?: string | null
   moq?: number
+  is_in_homepage?: boolean
 }
 
 export const updateProductCustomStep = createStep(
@@ -23,16 +24,17 @@ export const updateProductCustomStep = createStep(
 
     if (existing && existing.length > 0) {
       const record = existing[0]
-      result = await productCustomModule.updateProductCustoms({
-        id: record.id,
-        document_url: input.document_url,
-        moq: input.moq,
-      })
+      const updateData: Record<string, any> = { id: record.id }
+      if (input.document_url !== undefined) updateData.document_url = input.document_url
+      if (input.moq !== undefined) updateData.moq = input.moq
+      if (input.is_in_homepage !== undefined) updateData.is_in_homepage = input.is_in_homepage
+      result = await productCustomModule.updateProductCustoms(updateData)
     } else {
       result = await productCustomModule.createProductCustoms({
         product_id: input.product_id,
         document_url: input.document_url ?? null,
         moq: input.moq ?? 1,
+        is_in_homepage: input.is_in_homepage ?? false,
       })
     }
 

@@ -15,6 +15,7 @@ type UpdateTestimonialWorkflowInput = {
   position_ar?: string
   display_order?: number
   is_published?: boolean
+  is_in_homepage?: boolean
 }
 
 export const updateTestimonialWorkflow = createWorkflow(

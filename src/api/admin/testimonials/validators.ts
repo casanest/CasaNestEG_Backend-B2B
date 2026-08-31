@@ -10,6 +10,7 @@ export const PostAdminTestimonialSchema = z.object({
   position_ar: z.string().min(1),
   display_order: z.number().default(0),
   is_published: z.boolean().default(false),
+  is_in_homepage: z.boolean().default(false),
 })
 
 export type PostAdminTestimonialSchema = z.infer<typeof PostAdminTestimonialSchema>
@@ -24,6 +25,7 @@ export const PostAdminTestimonialUpdateSchema = z.object({
   position_ar: z.string().min(1).optional(),
   display_order: z.number().optional(),
   is_published: z.boolean().optional(),
+  is_in_homepage: z.boolean().optional(),
 })
 
 export type PostAdminTestimonialUpdateSchema = z.infer<

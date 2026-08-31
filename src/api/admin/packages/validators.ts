@@ -8,6 +8,7 @@ export const PostAdminPackageSchema = z.object({
   description_ar: z.string().nullable().optional(),
   image_url: z.string().nullable().optional(),
   is_published: z.boolean().default(false),
+  is_in_homepage: z.boolean().default(false),
 })
 
 export type PostAdminPackageSchema = z.infer<typeof PostAdminPackageSchema>
@@ -20,6 +21,7 @@ export const PostAdminPackageUpdateSchema = z.object({
   description_ar: z.string().nullable().optional(),
   image_url: z.string().nullable().optional(),
   is_published: z.boolean().optional(),
+  is_in_homepage: z.boolean().optional(),
 })
 
 export type PostAdminPackageUpdateSchema = z.infer<

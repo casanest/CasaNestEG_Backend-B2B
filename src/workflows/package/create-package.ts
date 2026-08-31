@@ -13,6 +13,7 @@ type CreatePackageWorkflowInput = {
   description_ar?: string | null
   image_url?: string | null
   is_published?: boolean
+  is_in_homepage?: boolean
 }
 
 export const createPackageWorkflow = createWorkflow(
@@ -31,6 +32,7 @@ export const createPackageWorkflow = createWorkflow(
       description_ar: input.description_ar,
       image_url: input.image_url,
       is_published: input.is_published,
+      is_in_homepage: input.is_in_homepage,
     })
 
     return new WorkflowResponse({

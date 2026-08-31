@@ -11,6 +11,7 @@ type UpdatePackageStepInput = {
   description_ar?: string | null
   image_url?: string | null
   is_published?: boolean
+  is_in_homepage?: boolean
 }
 
 export const updatePackageStep = createStep(
@@ -30,6 +31,7 @@ export const updatePackageStep = createStep(
     if (input.description_ar !== undefined) updateData.description_ar = input.description_ar
     if (input.image_url !== undefined) updateData.image_url = input.image_url
     if (input.is_published !== undefined) updateData.is_published = input.is_published
+    if (input.is_in_homepage !== undefined) updateData.is_in_homepage = input.is_in_homepage
 
     const updated = await packageModule.updatePackages(updateData)
 
@@ -49,6 +51,7 @@ export const updatePackageStep = createStep(
       description_ar: compensationData.original.description_ar,
       image_url: compensationData.original.image_url,
       is_published: compensationData.original.is_published,
+      is_in_homepage: compensationData.original.is_in_homepage,
     })
   }
 )

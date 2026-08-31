@@ -24,10 +24,12 @@ export async function GET(
       ? {
           document_url: custom.document_url,
           moq: custom.moq,
+          is_in_homepage: custom.is_in_homepage,
         }
       : {
           document_url: null,
           moq: 1,
+          is_in_homepage: false,
         },
   })
 }
@@ -37,13 +39,14 @@ export async function POST(
   res: MedusaResponse
 ) {
   const { id } = req.params
-  const { document_url, moq } = req.validatedBody
+  const { document_url, moq, is_in_homepage } = req.validatedBody
 
   const { result } = await updateProductCustomWorkflow(req.scope).run({
     input: {
       product_id: id,
       document_url,
       moq,
+      is_in_homepage,
     },
   })
 
@@ -51,6 +54,7 @@ export async function POST(
     product_custom: {
       document_url: result.product_custom.document_url,
       moq: result.product_custom.moq,
+      is_in_homepage: result.product_custom.is_in_homepage,
     },
   })
 }

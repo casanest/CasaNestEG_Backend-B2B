@@ -25,6 +25,7 @@ export async function GET(
       "description_ar",
       "image_url",
       "is_published",
+      "is_in_homepage",
       "created_at",
       "updated_at",
       "titles.id",

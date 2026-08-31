@@ -11,6 +11,7 @@ const Testimonial = model.define("testimonial", {
   position_ar: model.text(),
   display_order: model.number().default(0),
   is_published: model.boolean().default(false),
+  is_in_homepage: model.boolean().default(false),
 })
 
 export default Testimonial

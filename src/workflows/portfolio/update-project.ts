@@ -1,6 +1,7 @@
 import {
   createWorkflow,
   WorkflowResponse,
+  when,
 } from "@medusajs/framework/workflows-sdk"
 import { updateProjectStep } from "./steps/update-project"
 import { syncProjectMetricsStep } from "./steps/sync-project-metrics"
@@ -73,20 +74,26 @@ export const updateProjectWorkflow = createWorkflow(
       position_ar: input.position_ar,
     })
 
-    const metrics = syncProjectMetricsStep({
-      project_id: input.id,
-      metrics: input.metrics ?? [],
-    }).config({ name: "sync-project-metrics" })
+    const metrics = when(input, (input) => input.metrics !== undefined).then(
+      () => syncProjectMetricsStep({
+        project_id: input.id,
+        metrics: input.metrics ?? [],
+      }).config({ name: "sync-project-metrics" })
+    )
 
-    const sub_paragraphs = syncProjectSubParagraphsStep({
-      project_id: input.id,
-      sub_paragraphs: input.sub_paragraphs ?? [],
-    }).config({ name: "sync-project-sub-paragraphs" })
+    const sub_paragraphs = when(input, (input) => input.sub_paragraphs !== undefined).then(
+      () => syncProjectSubParagraphsStep({
+        project_id: input.id,
+        sub_paragraphs: input.sub_paragraphs ?? [],
+      }).config({ name: "sync-project-sub-paragraphs" })
+    )
 
-    const gallery_images = syncProjectGalleryImagesStep({
-      project_id: input.id,
-      gallery_images: input.gallery_images ?? [],
-    }).config({ name: "sync-project-gallery-images" })
+    const gallery_images = when(input, (input) => input.gallery_images !== undefined).then(
+      () => syncProjectGalleryImagesStep({
+        project_id: input.id,
+        gallery_images: input.gallery_images ?? [],
+      }).config({ name: "sync-project-gallery-images" })
+    )
 
     return new WorkflowResponse({
       project,
