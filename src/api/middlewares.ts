@@ -19,6 +19,7 @@ import { PostAdminPackageSchema, PostAdminPackageUpdateSchema, PostAdminPackageT
 import { PostAdminPackageTitleUpdateSchema, PostAdminAttachProductsSchema } from './admin/package-titles/validators';
 import { PostAdminTestimonialSchema, PostAdminTestimonialUpdateSchema } from './admin/testimonials/validators';
 import { PostAdminBannerSchema, PostAdminBannerUpdateSchema } from './admin/banners/validators';
+import { PostAdminSocialMediaSchema, PostAdminSocialMediaUpdateSchema } from './admin/social-media/validators';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -172,5 +173,15 @@ export default defineMiddlewares([
     matcher: '/admin/banners/:id',
     method: 'POST',
     middlewares: [validateAndTransformBody(PostAdminBannerUpdateSchema)],
+  },
+  {
+    matcher: '/admin/social-media',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminSocialMediaSchema)],
+  },
+  {
+    matcher: '/admin/social-media/:id',
+    method: 'POST',
+    middlewares: [validateAndTransformBody(PostAdminSocialMediaUpdateSchema)],
   },
 ]);

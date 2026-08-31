@@ -119,6 +119,9 @@ const modulesConfig = {
   banner: {
     resolve: './src/modules/banner',
   },
+  'social-media': {
+    resolve: './src/modules/social-media',
+  },
 }
 
 module.exports = defineConfig({
