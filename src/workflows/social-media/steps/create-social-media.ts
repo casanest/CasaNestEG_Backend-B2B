@@ -6,6 +6,7 @@ type CreateSocialMediaStepInput = {
   platform: string
   url: string
   label?: string | null
+  description?: string | null
   display_order?: number
   is_published?: boolean
 }

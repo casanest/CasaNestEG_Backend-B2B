@@ -17,6 +17,7 @@ export async function GET(
       "platform",
       "url",
       "label",
+      "description",
       "display_order",
     ],
     filters: { is_published: true },

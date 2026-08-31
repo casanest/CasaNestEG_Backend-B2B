@@ -5,6 +5,7 @@ export type SocialMedia = {
   platform: string
   url: string
   label: string | null
+  description: string | null
   display_order: number
   is_published: boolean
   created_at: string
@@ -15,6 +16,7 @@ export type CreateSocialMediaInput = {
   platform: string
   url: string
   label?: string | null
+  description?: string | null
   display_order?: number
   is_published?: boolean
 }

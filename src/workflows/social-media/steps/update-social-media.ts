@@ -7,6 +7,7 @@ type UpdateSocialMediaStepInput = {
   platform?: string
   url?: string
   label?: string | null
+  description?: string | null
   display_order?: number
   is_published?: boolean
 }
@@ -24,6 +25,7 @@ export const updateSocialMediaStep = createStep(
     if (input.platform !== undefined) updateData.platform = input.platform
     if (input.url !== undefined) updateData.url = input.url
     if (input.label !== undefined) updateData.label = input.label
+    if (input.description !== undefined) updateData.description = input.description
     if (input.display_order !== undefined) updateData.display_order = input.display_order
     if (input.is_published !== undefined) updateData.is_published = input.is_published
 
@@ -41,6 +43,7 @@ export const updateSocialMediaStep = createStep(
       platform: compensationData.original.platform,
       url: compensationData.original.url,
       label: compensationData.original.label,
+      description: compensationData.original.description,
       display_order: compensationData.original.display_order,
       is_published: compensationData.original.is_published,
     })

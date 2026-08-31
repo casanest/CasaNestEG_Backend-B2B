@@ -10,6 +10,7 @@ const CreateSocialMediaPage = () => {
   const [platform, setPlatform] = useState("facebook")
   const [url, setUrl] = useState("")
   const [label, setLabel] = useState("")
+  const [description, setDescription] = useState("")
   const [displayOrder, setDisplayOrder] = useState(0)
   const [isPublished, setIsPublished] = useState(false)
 
@@ -24,6 +25,7 @@ const CreateSocialMediaPage = () => {
         platform,
         url,
         label: label || null,
+        description: description || null,
         display_order: displayOrder,
         is_published: isPublished,
       })
@@ -78,6 +80,18 @@ const CreateSocialMediaPage = () => {
           />
           <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
             Optional display label for the link.
+          </Text>
+        </div>
+
+        <div>
+          <Text size="small" weight="plus" className="mb-1">Description (optional)</Text>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Connect for project updates, industry insights, and partnerships."
+          />
+          <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
+            Short description shown on the Contact Us social cards.
           </Text>
         </div>
 

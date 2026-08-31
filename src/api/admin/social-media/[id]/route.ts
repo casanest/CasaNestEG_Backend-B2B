@@ -21,6 +21,7 @@ export async function GET(
       "platform",
       "url",
       "label",
+      "description",
       "display_order",
       "is_published",
       "created_at",

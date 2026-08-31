@@ -4,6 +4,7 @@ export const PostAdminSocialMediaSchema = z.object({
   platform: z.string().min(1),
   url: z.string().min(1),
   label: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   display_order: z.number().default(0),
   is_published: z.boolean().default(false),
 })
@@ -14,6 +15,7 @@ export const PostAdminSocialMediaUpdateSchema = z.object({
   platform: z.string().min(1).optional(),
   url: z.string().min(1).optional(),
   label: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   display_order: z.number().optional(),
   is_published: z.boolean().optional(),
 })

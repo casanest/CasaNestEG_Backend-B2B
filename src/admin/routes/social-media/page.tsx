@@ -58,6 +58,7 @@ const SocialMediaListPage = () => {
               <Table.HeaderCell>Platform</Table.HeaderCell>
               <Table.HeaderCell>URL</Table.HeaderCell>
               <Table.HeaderCell>Label</Table.HeaderCell>
+              <Table.HeaderCell>Description</Table.HeaderCell>
               <Table.HeaderCell>Order</Table.HeaderCell>
               <Table.HeaderCell>Published</Table.HeaderCell>
               <Table.HeaderCell>Actions</Table.HeaderCell>
@@ -73,6 +74,7 @@ const SocialMediaListPage = () => {
                 <Table.Cell>{getPlatformLabel(item.platform)}</Table.Cell>
                 <Table.Cell className="max-w-[300px] truncate">{item.url}</Table.Cell>
                 <Table.Cell>{item.label || "-"}</Table.Cell>
+                <Table.Cell className="max-w-[200px] truncate">{item.description || "-"}</Table.Cell>
                 <Table.Cell>{item.display_order}</Table.Cell>
                 <Table.Cell>
                   <StatusBadge color={item.is_published ? "green" : "grey"}>

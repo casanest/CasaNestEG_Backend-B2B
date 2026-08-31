@@ -19,6 +19,7 @@ const SocialMediaDetailPage = () => {
   const [platform, setPlatform] = useState("facebook")
   const [url, setUrl] = useState("")
   const [label, setLabel] = useState("")
+  const [description, setDescription] = useState("")
   const [displayOrder, setDisplayOrder] = useState(0)
   const [isPublished, setIsPublished] = useState(false)
 
@@ -28,6 +29,7 @@ const SocialMediaDetailPage = () => {
       setPlatform(item.platform)
       setUrl(item.url)
       setLabel(item.label || "")
+      setDescription(item.description || "")
       setDisplayOrder(item.display_order)
       setIsPublished(item.is_published)
     }
@@ -43,6 +45,7 @@ const SocialMediaDetailPage = () => {
         platform,
         url,
         label: label || null,
+        description: description || null,
         display_order: displayOrder,
         is_published: isPublished,
       })
@@ -110,6 +113,18 @@ const SocialMediaDetailPage = () => {
         <div>
           <Text size="small" weight="plus" className="mb-1">Label (optional)</Text>
           <Input value={label} onChange={(e) => setLabel(e.target.value)} />
+        </div>
+
+        <div>
+          <Text size="small" weight="plus" className="mb-1">Description (optional)</Text>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Connect for project updates, industry insights, and partnerships."
+          />
+          <Text size="xsmall" className="mt-1 text-ui-fg-subtle">
+            Short description shown on the Contact Us social cards.
+          </Text>
         </div>
 
         <div>

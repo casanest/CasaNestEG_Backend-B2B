@@ -5,6 +5,7 @@ const SocialMedia = model.define("social_media", {
   platform: model.text(),
   url: model.text(),
   label: model.text().nullable(),
+  description: model.text().nullable(),
   display_order: model.number().default(0),
   is_published: model.boolean().default(false),
 })
