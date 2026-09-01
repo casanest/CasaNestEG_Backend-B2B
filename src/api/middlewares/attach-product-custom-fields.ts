@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { PRODUCT_CUSTOM_MODULE } from "../../modules/productCustom"
+import ProductCustomModuleService from "../../modules/productCustom/service"
 
 const RELATED_FIELDS = [
   "id",
@@ -105,7 +106,7 @@ const attachProductCustomFields = async (
   const originalJson = res.json.bind(res) as (body: any) => void
 
   ;(res as any).json = function (body: any) {
-    const productCustomModule = req.scope.resolve(PRODUCT_CUSTOM_MODULE)
+    const productCustomModule = req.scope.resolve(PRODUCT_CUSTOM_MODULE) as ProductCustomModuleService
     const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
     const augment = async () => {

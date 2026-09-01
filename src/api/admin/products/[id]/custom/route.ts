@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { updateProductCustomWorkflow } from "../../../../../workflows/update-product-custom"
 import { PRODUCT_CUSTOM_MODULE } from "../../../../../modules/productCustom"
+import ProductCustomModuleService from "../../../../../modules/productCustom/service"
 import { PostProductCustomSchema } from "./validators"
 
 export async function GET(
@@ -11,7 +12,7 @@ export async function GET(
   res: MedusaResponse
 ) {
   const { id } = req.params
-  const productCustomModule = req.scope.resolve(PRODUCT_CUSTOM_MODULE)
+  const productCustomModule = req.scope.resolve(PRODUCT_CUSTOM_MODULE) as ProductCustomModuleService
 
   const records = await productCustomModule.listProductCustoms({
     product_id: id,
