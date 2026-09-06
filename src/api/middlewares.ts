@@ -3,7 +3,14 @@ import {
   validateAndTransformBody,
   validateAndTransformQuery,
 } from '@medusajs/framework';
-import type { MedusaRequest, MedusaResponse, MedusaNextFunction } from '@medusajs/framework/http';
+import {
+  errorHandler,
+  type MedusaRequest,
+  type MedusaResponse,
+  type MedusaNextFunction,
+} from '@medusajs/framework/http';
+import { MedusaError } from '@medusajs/framework/utils';
+import * as Sentry from '@sentry/node';
 import multer from 'multer';
 import { storeSearchRoutesMiddlewares } from './store/search/middlewares';
 import { PostStoreRfq } from './store/rfq/validators';
@@ -46,7 +53,10 @@ const parseRfqItems = (req: MedusaRequest, res: MedusaResponse, next: MedusaNext
   next();
 };
 
-export default defineMiddlewares([
+const originalErrorHandler = errorHandler();
+
+export default defineMiddlewares({
+  routes: [
   ...storeSearchRoutesMiddlewares,
   {
     matcher: '/store/rfq',
@@ -205,4 +215,14 @@ export default defineMiddlewares([
     method: 'POST',
     middlewares: [validateAndTransformBody(PostAdminRfqComment)],
   },
-]);
+  ],
+  errorHandler: (
+    error: MedusaError | any,
+    req: MedusaRequest,
+    res: MedusaResponse,
+    next: MedusaNextFunction
+  ) => {
+    Sentry.captureException(error);
+    return originalErrorHandler(error, req, res, next);
+  },
+});

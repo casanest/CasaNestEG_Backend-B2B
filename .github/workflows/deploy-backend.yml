@@ -1,0 +1,126 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  build-check:
+    name: Build & sanity-check on GitHub runner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        # Same reasoning as the frontend pipeline: must run after setup-node,
+        # before any yarn command, so the pinned packageManager version in
+        # package.json is actually respected instead of refused.
+        run: corepack enable
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+          key: yarn-berry-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-berry-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build
+        run: yarn build
+
+      # NOTE: db:migrate is intentionally NOT run here. It needs a real
+      # database and running it against a throwaway CI database wouldn't
+      # tell you anything about whether it's safe against your actual
+      # production data/schema state. Migration safety is checked by
+      # reviewing the migration file itself, not by CI.
+
+  deploy:
+    name: Deploy to VPS
+    needs: build-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -euo pipefail
+            PROJECT_DIR="/root/CASA_NEST_BACKEND"
+            PM2_NAME="casa-nest-backend"
+            cd "$PROJECT_DIR"
+
+            echo "==> Recording current commit for possible rollback"
+            PREV_COMMIT=$(git rev-parse HEAD)
+            echo "$PREV_COMMIT" > /root/.last_good_backend_commit
+
+            echo "==> Syncing to origin/main (reset, never merge/rebase on this box)"
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "==> Installing dependencies"
+            corepack enable
+            yarn install --immutable
+
+            echo "==> Running database migrations"
+            # WARNING: if anything below this line fails, the rollback further
+            # down only reverts CODE — it does not undo a migration that already
+            # ran. Review migrations for safety before merging to main; don't
+            # rely on this pipeline to make a bad migration reversible.
+            npx medusa db:migrate
+
+            echo "==> Building project"
+            yarn build
+
+            echo "==> Syncing admin build (medusa start reads from public/admin, not .medusa/server/public/admin)"
+            rm -rf public/admin
+            cp -r .medusa/server/public/admin public/admin
+
+            echo "==> Restarting server via PM2"
+            pm2 delete "$PM2_NAME" 2>/dev/null || true
+            pm2 start npm --name "$PM2_NAME" -- start
+            pm2 save
+
+            echo "==> Reloading nginx"
+            nginx -t && systemctl reload nginx
+
+            echo "==> Verifying served build"
+            sleep 5
+            SERVED_HASH=$(curl -s http://127.0.0.1:9005/app/products | grep -o 'assets/index-[^"]*\.js' || echo "NOT FOUND")
+            DISK_HASH=$(grep -o 'assets/index-[^"]*\.js' public/admin/index.html || echo "NOT FOUND")
+            echo "    On disk:  $DISK_HASH"
+            echo "    Served:   $SERVED_HASH"
+
+            if [ "$SERVED_HASH" = "$DISK_HASH" ] && [ "$SERVED_HASH" != "NOT FOUND" ]; then
+              echo "==> Deploy successful, admin build matches"
+            else
+              echo "==> Served build does not match disk build — rolling back CODE to $PREV_COMMIT"
+              echo "==> NOTE: this does NOT undo any migration that already ran above."
+              git reset --hard "$PREV_COMMIT"
+              yarn install --immutable
+              yarn build
+              rm -rf public/admin
+              cp -r .medusa/server/public/admin public/admin
+              pm2 delete "$PM2_NAME" 2>/dev/null || true
+              pm2 start npm --name "$PM2_NAME" -- start
+              pm2 save
+              nginx -t && systemctl reload nginx
+              echo "==> Rolled back code. Deploy FAILED — check migration state manually if one ran."
+              exit 1
+            fi
