@@ -19,7 +19,7 @@ otelApi.propagation.setGlobalPropagator(new SentryPropagator())
 export function register() {
   registerOtel({
     serviceName: "medusa",
-    // @ts-expect-error SentrySpanProcessor type incompatible with @opentelemetry/sdk-trace-base SpanProcessor due to version mismatch
+    // @ts-ignore SentrySpanProcessor type incompatible with @opentelemetry/sdk-trace-base SpanProcessor due to version mismatch
     spanProcessors: [new SentrySpanProcessor()],
     traceExporter: new OTLPTraceExporter(),
     instrument: {
