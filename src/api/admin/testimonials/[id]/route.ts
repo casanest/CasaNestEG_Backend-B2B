@@ -5,6 +5,7 @@ import {
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { updateTestimonialWorkflow } from "../../../../workflows/testimonial/update-testimonial"
 import { deleteTestimonialWorkflow } from "../../../../workflows/testimonial/delete-testimonial"
+import { revalidateStorefrontTag } from "../../../../lib/revalidate-storefront"
 import type { PostAdminTestimonialUpdateSchema } from "../validators"
 
 export async function GET(
@@ -53,6 +54,8 @@ export async function POST(
     },
   })
 
+  await revalidateStorefrontTag("testimonials")
+
   res.json({ testimonial: result.testimonial })
 }
 
@@ -64,6 +67,8 @@ export async function DELETE(
   await deleteTestimonialWorkflow(req.scope).run({
     input: { id },
   })
+
+  await revalidateStorefrontTag("testimonials")
 
   res.json({ id })
 }

@@ -5,6 +5,7 @@ import {
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { updateCategoryWorkflow } from "../../../../../workflows/portfolio/update-category"
 import { deleteCategoryWorkflow } from "../../../../../workflows/portfolio/delete-category"
+import { revalidateStorefrontTag } from "../../../../../lib/revalidate-storefront"
 import type { PostAdminPortfolioCategoryUpdateSchema } from "../validators"
 
 export async function GET(
@@ -39,6 +40,8 @@ export async function POST(
     },
   })
 
+  await revalidateStorefrontTag("portfolio")
+
   res.json({ category: result.category })
 }
 
@@ -50,6 +53,8 @@ export async function DELETE(
   await deleteCategoryWorkflow(req.scope).run({
     input: { id },
   })
+
+  await revalidateStorefrontTag("portfolio")
 
   res.json({ id })
 }

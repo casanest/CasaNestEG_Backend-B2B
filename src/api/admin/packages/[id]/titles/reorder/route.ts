@@ -5,6 +5,7 @@ import {
 import { MedusaError } from "@medusajs/framework/utils"
 import { PACKAGE_MODULE } from "../../../../../../modules/package"
 import PackageModuleService from "../../../../../../modules/package/service"
+import { revalidateStorefrontTag } from "../../../../../../lib/revalidate-storefront"
 import type { PostAdminReorderTitlesSchema } from "../../../validators"
 
 export async function POST(
@@ -23,6 +24,8 @@ export async function POST(
       display_order: i,
     })
   }
+
+  await revalidateStorefrontTag("packages")
 
   res.json({ id, title_ids })
 }

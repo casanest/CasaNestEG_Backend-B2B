@@ -3,6 +3,7 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import { createProjectWorkflow } from "../../../../workflows/portfolio/create-project"
+import { revalidateStorefrontTag } from "../../../../lib/revalidate-storefront"
 import type { PostAdminPortfolioProjectSchema } from "./validators"
 
 export async function POST(
@@ -12,6 +13,8 @@ export async function POST(
   const { result } = await createProjectWorkflow(req.scope).run({
     input: req.validatedBody as any,
   })
+
+  await revalidateStorefrontTag("portfolio")
 
   res.json({
     project: result.project,

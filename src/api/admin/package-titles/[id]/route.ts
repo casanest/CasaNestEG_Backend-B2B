@@ -5,6 +5,7 @@ import {
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { updatePackageTitleWorkflow } from "../../../../workflows/package/update-package-title"
 import { deletePackageTitleWorkflow } from "../../../../workflows/package/delete-package-title"
+import { revalidateStorefrontTag } from "../../../../lib/revalidate-storefront"
 import type { PostAdminPackageTitleUpdateSchema } from "../validators"
 
 export async function GET(
@@ -52,6 +53,8 @@ export async function POST(
     },
   })
 
+  await revalidateStorefrontTag("packages")
+
   res.json({ title: result.title })
 }
 
@@ -63,6 +66,8 @@ export async function DELETE(
   await deletePackageTitleWorkflow(req.scope).run({
     input: { id },
   })
+
+  await revalidateStorefrontTag("packages")
 
   res.json({ id })
 }

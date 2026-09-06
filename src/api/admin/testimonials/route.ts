@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createTestimonialWorkflow } from "../../../workflows/testimonial/create-testimonial"
+import { revalidateStorefrontTag } from "../../../lib/revalidate-storefront"
 import type { PostAdminTestimonialSchema } from "./validators"
 
 export async function GET(
@@ -44,6 +45,8 @@ export async function POST(
   const { result } = await createTestimonialWorkflow(req.scope).run({
     input: req.validatedBody as any,
   })
+
+  await revalidateStorefrontTag("testimonials")
 
   res.json({ testimonial: result.testimonial })
 }

@@ -5,6 +5,7 @@ import {
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { updateProjectWorkflow } from "../../../../../workflows/portfolio/update-project"
 import { deleteProjectWorkflow } from "../../../../../workflows/portfolio/delete-project"
+import { revalidateStorefrontTag } from "../../../../../lib/revalidate-storefront"
 import type { PostAdminPortfolioProjectUpdateSchema } from "../validators"
 
 export async function GET(
@@ -70,6 +71,8 @@ export async function POST(
     },
   })
 
+  await revalidateStorefrontTag("portfolio")
+
   res.json({
     project: result.project,
     metrics: result.metrics,
@@ -86,6 +89,8 @@ export async function DELETE(
   await deleteProjectWorkflow(req.scope).run({
     input: { id },
   })
+
+  await revalidateStorefrontTag("portfolio")
 
   res.json({ id })
 }

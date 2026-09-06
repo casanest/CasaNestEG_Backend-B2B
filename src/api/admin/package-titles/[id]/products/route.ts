@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { attachProductsToTitleWorkflow } from "../../../../../workflows/package/attach-products-to-title"
 import { detachProductsFromTitleWorkflow } from "../../../../../workflows/package/detach-products-from-title"
+import { revalidateStorefrontTag } from "../../../../../lib/revalidate-storefront"
 import type { PostAdminAttachProductsSchema } from "../../validators"
 
 export async function POST(
@@ -19,6 +20,8 @@ export async function POST(
       product_ids,
     },
   })
+
+  await revalidateStorefrontTag("packages")
 
   res.json(result)
 }
@@ -36,6 +39,8 @@ export async function DELETE(
       product_ids,
     },
   })
+
+  await revalidateStorefrontTag("packages")
 
   res.json(result)
 }

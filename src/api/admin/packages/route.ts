@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createPackageWorkflow } from "../../../workflows/package/create-package"
+import { revalidateStorefrontTag } from "../../../lib/revalidate-storefront"
 import type { PostAdminPackageSchema } from "./validators"
 
 export async function GET(
@@ -54,6 +55,8 @@ export async function POST(
   const { result } = await createPackageWorkflow(req.scope).run({
     input: req.validatedBody as any,
   })
+
+  await revalidateStorefrontTag("packages")
 
   res.json({ package: result.package })
 }

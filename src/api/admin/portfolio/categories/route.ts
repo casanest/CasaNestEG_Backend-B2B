@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createCategoryWorkflow } from "../../../../workflows/portfolio/create-category"
+import { revalidateStorefrontTag } from "../../../../lib/revalidate-storefront"
 import type { PostAdminPortfolioCategorySchema } from "./validators"
 
 export async function GET(
@@ -30,6 +31,8 @@ export async function POST(
   const { result } = await createCategoryWorkflow(req.scope).run({
     input: req.validatedBody as any,
   })
+
+  await revalidateStorefrontTag("portfolio")
 
   res.json({ category: result.category })
 }

@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createBannerWorkflow } from "../../../workflows/banner/create-banner"
+import { revalidateStorefrontTag } from "../../../lib/revalidate-storefront"
 import type { PostAdminBannerSchema } from "./validators"
 
 export async function GET(
@@ -38,6 +39,8 @@ export async function POST(
   const { result } = await createBannerWorkflow(req.scope).run({
     input: req.validatedBody as any,
   })
+
+  await revalidateStorefrontTag("banners")
 
   res.json({ banner: result.banner })
 }

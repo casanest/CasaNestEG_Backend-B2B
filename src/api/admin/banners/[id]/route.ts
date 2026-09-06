@@ -5,6 +5,7 @@ import {
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { updateBannerWorkflow } from "../../../../workflows/banner/update-banner"
 import { deleteBannerWorkflow } from "../../../../workflows/banner/delete-banner"
+import { revalidateStorefrontTag } from "../../../../lib/revalidate-storefront"
 import type { PostAdminBannerUpdateSchema } from "../validators"
 
 export async function GET(
@@ -47,6 +48,8 @@ export async function POST(
     },
   })
 
+  await revalidateStorefrontTag("banners")
+
   res.json({ banner: result.banner })
 }
 
@@ -58,6 +61,8 @@ export async function DELETE(
   await deleteBannerWorkflow(req.scope).run({
     input: { id },
   })
+
+  await revalidateStorefrontTag("banners")
 
   res.json({ id })
 }

@@ -6,6 +6,7 @@ import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/util
 import { createPackageTitleWorkflow } from "../../../../../workflows/package/create-package-title"
 import { PACKAGE_MODULE } from "../../../../../modules/package"
 import PackageModuleService from "../../../../../modules/package/service"
+import { revalidateStorefrontTag } from "../../../../../lib/revalidate-storefront"
 import type { PostAdminPackageTitleSchema } from "../../validators"
 
 export async function POST(
@@ -31,6 +32,8 @@ export async function POST(
       display_order,
     },
   })
+
+  await revalidateStorefrontTag("packages")
 
   res.json({ title: result.title })
 }
