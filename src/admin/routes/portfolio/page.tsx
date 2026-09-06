@@ -9,7 +9,7 @@ const CategoryListPage = () => {
   const navigate = useNavigate()
   const { data, isLoading, error } = usePortfolioCategories()
   const createCategory = useCreateCategory()
-  const updateCategory = useUpdateCategory("")
+  const updateCategory = useUpdateCategory()
   const deleteCategory = useDeleteCategory()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -47,7 +47,7 @@ const CategoryListPage = () => {
           slug,
           name_en: nameEn,
           name_ar: nameAr,
-        } as any)
+        })
         toast.success("Category updated")
       } else {
         await createCategory.mutateAsync({ slug, name_en: nameEn, name_ar: nameAr })

@@ -66,7 +66,7 @@ export type CreateCategoryInput = {
   name_ar: string
 }
 
-export type UpdateCategoryInput = Partial<CreateCategoryInput>
+export type UpdateCategoryInput = Partial<CreateCategoryInput> & { id: string }
 
 export type CreateProjectInput = {
   category_id: string
@@ -130,21 +130,22 @@ export const useCreateCategory = () => {
   })
 }
 
-export const useUpdateCategory = (id: string) => {
+export const useUpdateCategory = () => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (input: UpdateCategoryInput) => {
+    mutationFn: async (input: UpdateCategoryInput & { id: string }) => {
+      const { id, ...body } = input
       const response = await fetch(`/admin/portfolio/categories/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+        body: JSON.stringify(body),
       })
       if (!response.ok) throw new Error("Failed to update category")
       return response.json()
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["portfolio-categories"] })
-      queryClient.invalidateQueries({ queryKey: ["portfolio-category", id] })
+      queryClient.invalidateQueries({ queryKey: ["portfolio-category", variables.id] })
     },
   })
 }
