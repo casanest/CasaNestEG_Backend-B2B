@@ -100,6 +100,33 @@ class R2FileService extends AbstractFileProviderService {
     return mimeType?.toLowerCase().startsWith("image/")
   }
 
+  protected normalizeFilename(filename: string): string {
+    try {
+      const decoded = Buffer.from(filename, "latin1").toString("utf8")
+      if (decoded && !decoded.includes("\uFFFD")) {
+        return decoded
+      }
+    } catch (_e) {
+    }
+    return filename
+  }
+
+  protected sanitizeKeySegment(name: string): string {
+    const sanitized = name
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]+/g, "-")
+      .replace(/-{2,}/g, "-")
+      .replace(/^[-._]+|[-._]+$/g, "")
+      .slice(0, 100)
+    return sanitized || "file"
+  }
+
+  protected sanitizeExtension(ext: string): string {
+    const sanitized = ext.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
+    return sanitized ? `.${sanitized}` : ""
+  }
+
   protected async processImage(content: Buffer): Promise<Buffer> {
     const image = sharp(content, { failOn: "none" })
 
@@ -150,7 +177,10 @@ class R2FileService extends AbstractFileProviderService {
       )
     }
 
-    const parsedFilename = path.parse(file.filename)
+    const originalFilename = this.normalizeFilename(file.filename)
+    const parsedFilename = path.parse(originalFilename)
+    const baseName = this.sanitizeKeySegment(parsedFilename.name)
+    const fileExt = this.sanitizeExtension(parsedFilename.ext)
     const isImage = this.isImage(file.mimeType)
 
     let fileKey: string
@@ -158,7 +188,7 @@ class R2FileService extends AbstractFileProviderService {
     let contentType: string
 
     if (isImage) {
-      fileKey = `${this.config_.prefix}${parsedFilename.name}-${ulid()}.webp`
+      fileKey = `${this.config_.prefix}${baseName}-${ulid()}.webp`
       const rawContent = Buffer.from(file.content, "binary")
 
       try {
@@ -167,7 +197,7 @@ class R2FileService extends AbstractFileProviderService {
         this.logger_.error(
           `Sharp processing failed for ${file.filename}, uploading original: ${err}`
         )
-        fileKey = `${this.config_.prefix}${parsedFilename.name}-${ulid()}${parsedFilename.ext}`
+        fileKey = `${this.config_.prefix}${baseName}-${ulid()}${fileExt}`
         uploadContent = rawContent
         contentType = file.mimeType
         const command = new PutObjectCommand({
@@ -178,7 +208,7 @@ class R2FileService extends AbstractFileProviderService {
           ContentType: contentType,
           CacheControl: this.config_.cacheControl,
           Metadata: {
-            "x-amz-meta-original-filename": file.filename,
+            "original-filename": encodeURIComponent(originalFilename),
           },
         })
 
@@ -197,7 +227,7 @@ class R2FileService extends AbstractFileProviderService {
 
       contentType = "image/webp"
     } else {
-      fileKey = `${this.config_.prefix}${parsedFilename.name}-${ulid()}${parsedFilename.ext}`
+      fileKey = `${this.config_.prefix}${baseName}-${ulid()}${fileExt}`
       uploadContent = Buffer.from(file.content, "binary")
       contentType = file.mimeType
     }
@@ -210,7 +240,7 @@ class R2FileService extends AbstractFileProviderService {
       ContentType: contentType,
       CacheControl: this.config_.cacheControl,
       Metadata: {
-        "x-amz-meta-original-filename": file.filename,
+        "original-filename": encodeURIComponent(originalFilename),
       },
     })
 
