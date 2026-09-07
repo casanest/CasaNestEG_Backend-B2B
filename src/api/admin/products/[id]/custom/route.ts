@@ -6,6 +6,7 @@ import { updateProductCustomWorkflow } from "../../../../../workflows/update-pro
 import { PRODUCT_CUSTOM_MODULE } from "../../../../../modules/productCustom"
 import ProductCustomModuleService from "../../../../../modules/productCustom/service"
 import { PostProductCustomSchema } from "./validators"
+import { revalidateStorefrontTag } from "../../../../../lib/revalidate-storefront"
 
 export async function GET(
   req: AuthenticatedMedusaRequest,
@@ -26,11 +27,13 @@ export async function GET(
           document_url: custom.document_url,
           moq: custom.moq,
           is_in_homepage: custom.is_in_homepage,
+          show_price: custom.show_price,
         }
       : {
           document_url: null,
           moq: 1,
           is_in_homepage: false,
+          show_price: false,
         },
   })
 }
@@ -40,7 +43,7 @@ export async function POST(
   res: MedusaResponse
 ) {
   const { id } = req.params
-  const { document_url, moq, is_in_homepage } = req.validatedBody
+  const { document_url, moq, is_in_homepage, show_price } = req.validatedBody
 
   const { result } = await updateProductCustomWorkflow(req.scope).run({
     input: {
@@ -48,14 +51,18 @@ export async function POST(
       document_url,
       moq,
       is_in_homepage,
+      show_price,
     },
   })
+
+  await revalidateStorefrontTag("products")
 
   res.json({
     product_custom: {
       document_url: result.product_custom.document_url,
       moq: result.product_custom.moq,
       is_in_homepage: result.product_custom.is_in_homepage,
+      show_price: result.product_custom.show_price,
     },
   })
 }

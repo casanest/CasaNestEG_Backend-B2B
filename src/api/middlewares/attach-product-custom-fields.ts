@@ -121,6 +121,7 @@ const attachProductCustomFields = async (
           body.product.document_url = custom?.document_url ?? null
           body.product.moq = custom?.moq ?? 1
           body.product.is_in_homepage = custom?.is_in_homepage ?? false
+          body.product.show_price = custom?.show_price ?? false
 
           const categories = body.product.categories ?? []
           body.product.related_products = await fetchRelatedProducts(
@@ -149,6 +150,7 @@ const attachProductCustomFields = async (
             product.document_url = custom?.document_url ?? null
             product.moq = custom?.moq ?? 1
             product.is_in_homepage = custom?.is_in_homepage ?? false
+            product.show_price = custom?.show_price ?? false
           }
 
           const reqQuery = (req as any).validatedQuery || (req as any).query || {}

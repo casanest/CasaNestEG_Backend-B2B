@@ -10,6 +10,7 @@ const ProductCustomFieldsWidget = ({
   const [moq, setMoq] = useState<number>(1)
   const [documentUrl, setDocumentUrl] = useState<string>("")
   const [isInHomepage, setIsInHomepage] = useState<boolean>(false)
+  const [showPrice, setShowPrice] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -30,6 +31,7 @@ const ProductCustomFieldsWidget = ({
       setMoq(result.product_custom?.moq ?? 1)
       setDocumentUrl(result.product_custom?.document_url ?? "")
       setIsInHomepage(result.product_custom?.is_in_homepage ?? false)
+      setShowPrice(result.product_custom?.show_price ?? false)
     } catch (error) {
       console.error("Error loading custom fields:", error)
     } finally {
@@ -125,6 +127,7 @@ const ProductCustomFieldsWidget = ({
           moq,
           document_url: documentUrl || null,
           is_in_homepage: newValue,
+          show_price: showPrice,
         }),
       })
 
@@ -134,6 +137,7 @@ const ProductCustomFieldsWidget = ({
 
       const result = await response.json()
       setIsInHomepage(result.product_custom?.is_in_homepage ?? newValue)
+      setShowPrice(result.product_custom?.show_price ?? showPrice)
 
       toast.success(`Product ${newValue ? "added to" : "removed from"} homepage`)
     } catch (error) {
@@ -141,7 +145,40 @@ const ProductCustomFieldsWidget = ({
       toast.error("Failed to update homepage status")
       setIsInHomepage(!newValue)
     }
-  }, [data.id, moq, documentUrl])
+  }, [data.id, moq, documentUrl, showPrice])
+
+  const handleToggleShowPrice = useCallback(async (newValue: boolean) => {
+    setShowPrice(newValue)
+    try {
+      const response = await fetch(`/admin/products/${data.id}/custom`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          moq,
+          document_url: documentUrl || null,
+          is_in_homepage: isInHomepage,
+          show_price: newValue,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Save failed: ${response.status}`)
+      }
+
+      const result = await response.json()
+      setShowPrice(result.product_custom?.show_price ?? newValue)
+      setIsInHomepage(result.product_custom?.is_in_homepage ?? isInHomepage)
+
+      toast.success(`Price ${newValue ? "shown to" : "hidden from"} customers`)
+    } catch (error) {
+      console.error("Error toggling show_price:", error)
+      toast.error("Failed to update price visibility")
+      setShowPrice(!newValue)
+    }
+  }, [data.id, moq, documentUrl, isInHomepage])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -156,6 +193,7 @@ const ProductCustomFieldsWidget = ({
           moq,
           document_url: documentUrl || null,
           is_in_homepage: isInHomepage,
+          show_price: showPrice,
         }),
       })
 
@@ -169,6 +207,7 @@ const ProductCustomFieldsWidget = ({
       setMoq(result.product_custom?.moq ?? moq)
       setDocumentUrl(result.product_custom?.document_url ?? "")
       setIsInHomepage(result.product_custom?.is_in_homepage ?? false)
+      setShowPrice(result.product_custom?.show_price ?? false)
 
       toast.success("Success", {
         description: "Custom fields saved successfully",
@@ -183,7 +222,7 @@ const ProductCustomFieldsWidget = ({
     } finally {
       setIsSaving(false)
     }
-  }, [data.id, moq, documentUrl, isInHomepage])
+  }, [data.id, moq, documentUrl, isInHomepage, showPrice])
 
   if (isLoading) {
     return (
@@ -268,6 +307,17 @@ const ProductCustomFieldsWidget = ({
           />
           <Label htmlFor="is_in_homepage" size="small">
             Show on homepage
+          </Label>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            id="show_price"
+            checked={showPrice}
+            onCheckedChange={(val) => handleToggleShowPrice(val as boolean)}
+          />
+          <Label htmlFor="show_price" size="small">
+            Show price to customer
           </Label>
         </div>
 
