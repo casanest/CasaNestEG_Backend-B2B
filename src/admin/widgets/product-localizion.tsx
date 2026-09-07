@@ -1,9 +1,8 @@
 
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { Container, Heading, Button, Input, Textarea, Select, toast } from "@medusajs/ui"
-import { Plus, Trash, Globe, Save, AlertCircle, Package } from "lucide-react"
+import { Plus, Trash, Globe, Save, AlertCircle } from "lucide-react"
 import { useState, useCallback, useEffect } from "react"
-import React from "react"
 import { 
   DetailWidgetProps, 
   AdminProduct,
@@ -295,10 +294,10 @@ const ProductLocalizationWidget = ({
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Globe className="w-5 h-5 text-gray-500" />
+            <Globe className="w-5 h-5 text-ui-fg-subtle" />
             <Heading level="h2">Product Localization</Heading>
             {hasLocalizations && (
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-ui-fg-subtle">
                 ({Object.keys(localizations).length} language{Object.keys(localizations).length !== 1 ? 's' : ''})
               </span>
             )}
@@ -326,12 +325,12 @@ const ProductLocalizationWidget = ({
         </div>
         
         {/* Product Info */}
-        <div className="mt-3 p-3 bg-gray-50 rounded-md">
+        <div className="mt-3 p-3 bg-ui-bg-subtle rounded-md">
           <div className="text-sm">
-            <div className="font-medium text-gray-900">{data.title}</div>
-            <div className="text-gray-600">Handle: {data.handle}</div>
-            <div className="text-gray-600">Collection: {data.collection?.title || 'No collection'}</div>
-            <div className="text-gray-600">Status: {data.status}</div>
+            <div className="font-medium text-ui-fg-base">{data.title}</div>
+            <div className="text-ui-fg-subtle">Handle: {data.handle}</div>
+            <div className="text-ui-fg-subtle">Collection: {data.collection?.title || 'No collection'}</div>
+            <div className="text-ui-fg-subtle">Status: {data.status}</div>
           </div>
         </div>
       </div>
@@ -374,15 +373,15 @@ const ProductLocalizationWidget = ({
         {hasLocalizations ? (
           <div className="space-y-6">
             {Object.entries(localizations).map(([languageCode, localization]) => (
-              <div key={languageCode} className="border rounded-lg p-4 bg-gray-50">
+              <div key={languageCode} className="border border-ui-border-base rounded-lg p-4 bg-ui-bg-base">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-700">
+                    <div className="w-8 h-8 bg-ui-bg-base rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-ui-fg-base">
                         {languageCode.toUpperCase()}
                       </span>
                     </div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-ui-fg-base">
                       {getLanguageLabel(languageCode)}
                     </h3>
                   </div>
@@ -391,7 +390,7 @@ const ProductLocalizationWidget = ({
                     size="small"
                     onClick={() => handleRemoveLanguage(languageCode)}
                     disabled={isUpdating}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-ui-tag-red-text"
                   >
                     <Trash className="w-4 h-4" />
                   </Button>
@@ -401,7 +400,7 @@ const ProductLocalizationWidget = ({
                   {/* Title and subtitle */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Product Title *
                       </label>
                       <Input
@@ -413,7 +412,7 @@ const ProductLocalizationWidget = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Subtitle
                       </label>
                       <Input
@@ -428,7 +427,7 @@ const ProductLocalizationWidget = ({
 
                   {/* Description */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ui-fg-base mb-1">
                       Description *
                     </label>
                     <Textarea
@@ -444,7 +443,7 @@ const ProductLocalizationWidget = ({
                   {/* Handle and Material */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Handle
                       </label>
                       <Input
@@ -456,7 +455,7 @@ const ProductLocalizationWidget = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Material
                       </label>
                       <Input
@@ -470,11 +469,11 @@ const ProductLocalizationWidget = ({
                   </div>
 
                   {/* SEO Fields */}
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium text-gray-900 mb-3">SEO Information</h4>
+                  <div className="border-t border-ui-border-base pt-4">
+                    <h4 className="font-medium text-ui-fg-base mb-3">SEO Information</h4>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Meta Title
                         </label>
                         <Input
@@ -486,7 +485,7 @@ const ProductLocalizationWidget = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Meta Description
                         </label>
                         <Textarea
@@ -499,7 +498,7 @@ const ProductLocalizationWidget = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Meta Keywords
                         </label>
                         <Input
@@ -514,11 +513,11 @@ const ProductLocalizationWidget = ({
                   </div>
 
                   {/* Collection Information */}
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Collection Information</h4>
+                  <div className="border-t border-ui-border-base pt-4">
+                    <h4 className="font-medium text-ui-fg-base mb-3">Collection Information</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Collection Title
                         </label>
                         <Input
@@ -530,7 +529,7 @@ const ProductLocalizationWidget = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Collection Description
                         </label>
                         <Textarea
@@ -546,11 +545,11 @@ const ProductLocalizationWidget = ({
                   </div>
 
                   {/* Features and Categories */}
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Product Details</h4>
+                  <div className="border-t border-ui-border-base pt-4">
+                    <h4 className="font-medium text-ui-fg-base mb-3">Product Details</h4>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Features (comma-separated)
                         </label>
                         <Input
@@ -562,7 +561,7 @@ const ProductLocalizationWidget = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Category Names (comma-separated)
                         </label>
                         <Input
@@ -577,11 +576,11 @@ const ProductLocalizationWidget = ({
                   </div>
 
                   {/* Care Instructions and Warranty */}
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium text-gray-900 mb-3">Additional Information</h4>
+                  <div className="border-t border-ui-border-base pt-4">
+                    <h4 className="font-medium text-ui-fg-base mb-3">Additional Information</h4>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Care Instructions
                         </label>
                         <Textarea
@@ -594,7 +593,7 @@ const ProductLocalizationWidget = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Warranty Information
                         </label>
                         <Textarea
@@ -610,9 +609,9 @@ const ProductLocalizationWidget = ({
                   </div>
 
                   {/* Notes */}
-                  <div className="border-t pt-4">
+                  <div className="border-t border-ui-border-base pt-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Notes
                       </label>
                       <Textarea
@@ -631,14 +630,14 @@ const ProductLocalizationWidget = ({
           </div>
         ) : (
           <div className="text-center py-12">
-            <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Globe className="w-12 h-12 text-ui-fg-muted mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-ui-fg-base mb-2">
               No Localizations Added
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-ui-fg-subtle mb-4">
               Add translations for your product information in different languages.
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-ui-fg-muted">
               Select a language from the dropdown above to get started.
             </p>
           </div>
@@ -646,7 +645,7 @@ const ProductLocalizationWidget = ({
 
         {/* Save button at bottom */}
         {hasLocalizations && hasChanges && (
-          <div className="mt-6 pt-4 border-t">
+          <div className="mt-6 pt-4 border-t border-ui-border-base">
             <Button
               variant="primary"
               onClick={handleSaveLocalizations}
@@ -670,17 +669,17 @@ const ProductLocalizationWidget = ({
 
         {/* Metadata storage info */}
         {hasLocalizations && (
-          <div className="mt-6 p-3 bg-blue-50 rounded-md">
+          <div className="mt-6 p-3 bg-ui-bg-subtle rounded-md">
             <div className="flex items-start">
-              <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
-              <div className="text-xs text-blue-700">
+              <AlertCircle className="w-4 h-4 text-ui-fg-subtle mt-0.5 mr-2 flex-shrink-0" />
+              <div className="text-xs text-ui-fg-base">
                 <p className="font-medium mb-1">Metadata Storage</p>
-                <ul className="space-y-1 text-blue-600">
+                <ul className="space-y-1 text-ui-fg-subtle">
                   <li>• <code>localizations</code> - Object containing all translations</li>
                   <li>• <code>available_languages</code> - Array of language codes</li>
                   <li>• <code>localization_updated_at</code> - Last update timestamp</li>
                 </ul>
-                <p className="mt-2 text-blue-600">
+                <p className="mt-2 text-ui-fg-subtle">
                   Each language contains: <code>title</code>, <code>description</code>, <code>handle</code>, <code>material</code>, SEO fields, collection info, features, categories, and care instructions
                 </p>
               </div>
@@ -690,12 +689,12 @@ const ProductLocalizationWidget = ({
 
         {/* Current metadata display */}
         {hasLocalizations && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-md">
+          <div className="mt-4 p-3 bg-ui-bg-subtle rounded-md">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-ui-fg-base mb-1">
                 Current Localization Data
               </label>
-              <pre className="text-xs text-gray-600 overflow-x-auto p-2 bg-white rounded border max-h-32">
+              <pre className="text-xs text-ui-fg-subtle overflow-x-auto p-2 bg-ui-bg-base rounded border border-ui-border-base max-h-32">
                 {JSON.stringify(localizations, null, 2)}
               </pre>
             </div>

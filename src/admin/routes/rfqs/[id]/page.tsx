@@ -12,6 +12,10 @@ interface RfqItem {
   variant_sku: string | null
   product_handle: string | null
   thumbnail: string | null
+  variant_price: number | null
+  variant_currency: string | null
+  variant_original_price: number | null
+  variant_original_currency: string | null
 }
 
 interface Rfq {
@@ -169,6 +173,7 @@ const RfqDetailPage = () => {
                 <Table.Row>
                   <Table.HeaderCell>Product</Table.HeaderCell>
                   <Table.HeaderCell className="w-[140px]">Code</Table.HeaderCell>
+                  <Table.HeaderCell className="w-[120px] text-right">Price</Table.HeaderCell>
                   <Table.HeaderCell className="w-[80px] text-right">Qty</Table.HeaderCell>
                 </Table.Row>
               </Table.Header>
@@ -205,6 +210,28 @@ const RfqDetailPage = () => {
                       </Table.Cell>
                       <Table.Cell>
                         <Text className="font-mono text-sm">{item.variant_sku || '-'}</Text>
+                      </Table.Cell>
+                      <Table.Cell className="text-right">
+                        {item.variant_price != null ? (
+                          <div className="flex flex-col items-end">
+                            {item.variant_original_price != null && item.variant_original_price !== item.variant_price && (
+                              <span className="text-ui-fg-subtle line-through text-xs">
+                                {new Intl.NumberFormat('en-US', {
+                                  style: 'currency',
+                                  currency: item.variant_original_currency || 'USD',
+                                  minimumFractionDigits: 2,
+                                }).format(item.variant_original_price)}
+                              </span>
+                            )}
+                            <span className="font-medium">
+                              {new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: item.variant_currency || 'USD',
+                                minimumFractionDigits: 2,
+                              }).format(item.variant_price)}
+                            </span>
+                          </div>
+                        ) : '-'}
                       </Table.Cell>
                       <Table.Cell className="text-right font-medium">
                         {item.quantity}
