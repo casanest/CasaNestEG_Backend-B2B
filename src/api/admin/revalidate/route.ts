@@ -8,6 +8,7 @@ const REVALIDATE_TAGS = [
   "testimonials",
   "collections",
   "regions",
+  "categories",
 ]
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {

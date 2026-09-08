@@ -60,8 +60,8 @@ const RevalidatePage = () => {
         <Heading level="h1">Re-render Storefront Pages</Heading>
         <Text className="text-ui-fg-subtle">
           Click the button below to instantly re-render all cached storefront
-          pages. This will fetch the latest content for products, packages,
-          banners, portfolio, testimonials, collections, and regions.
+          pages, including the home page, categories, products, packages,
+          banners, portfolio, testimonials, and collections.
         </Text>
       </div>
 
