@@ -9,7 +9,7 @@ type Input = {
   company_name?: string
   city?: string
   address?: string
-  message: string
+  message?: string
 }
 
 export const createRfqStep = createStep(

@@ -7,7 +7,7 @@ export const PostStoreRfq = z.object({
   company_name: z.string().optional(),
   city: z.string().optional(),
   address: z.string().optional(),
-  message: z.string().min(1),
+  message: z.string().optional(),
   items: z.array(z.object({
     product_id: z.string(),
     quantity: z.number().int().min(1),

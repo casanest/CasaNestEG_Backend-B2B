@@ -8,7 +8,7 @@ const Rfq = model.define("rfq", {
   company_name: model.text().nullable(),
   city: model.text().nullable(),
   address: model.text().nullable(),
-  message: model.text(),
+  message: model.text().nullable(),
   status: model.enum(["pending", "quoted", "closed", "done"]).default("pending"),
 })
 

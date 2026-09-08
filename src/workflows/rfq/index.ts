@@ -11,7 +11,7 @@ export type CreateRfqWorkflowInput = {
   company_name?: string
   city?: string
   address?: string
-  message: string
+  message?: string
   items?: { product_id: string; quantity: number }[]
   files?: { originalname: string; buffer: string; mimetype: string; size: number }[]
 }
