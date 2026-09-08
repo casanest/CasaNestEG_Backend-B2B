@@ -12,6 +12,7 @@ export async function GET(
 ) {
   const { slug } = req.params
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+  const knex = req.scope.resolve("__pg_connection__")
 
   const { data: packages } = await query.graph({
     entity: "package",
@@ -38,9 +39,6 @@ export async function GET(
       "titles.products.metadata",
       "titles.products.product_custom.moq",
       "titles.products.product_custom.show_price",
-      "titles.products.variants.id",
-      "titles.products.variants.prices.amount",
-      "titles.products.variants.prices.currency_code",
     ],
     filters: { slug },
   })
@@ -76,6 +74,40 @@ export async function GET(
     customMap.set(r.product_id, r)
   }
 
+  // Get sale and regular prices via raw SQL — same approach as RFQ route
+  let priceMap = new Map<string, { sale_price: number | null; regular_price: number | null; sale_currency: string | null; regular_currency: string | null }>()
+
+  if (allProductIds.length > 0) {
+    const priceRows = await knex
+      .select(
+        "product_variant.product_id",
+        knex.raw("MIN(CASE WHEN price_list.type = 'sale' THEN price.amount END) AS sale_price"),
+        knex.raw("MIN(CASE WHEN price.price_list_id IS NULL THEN price.amount END) AS regular_price"),
+        knex.raw("MIN(CASE WHEN price_list.type = 'sale' THEN price.currency_code END) AS sale_currency"),
+        knex.raw("MIN(CASE WHEN price.price_list_id IS NULL THEN price.currency_code END) AS regular_currency")
+      )
+      .from("product_variant")
+      .innerJoin("product_variant_price_set", "product_variant_price_set.variant_id", "product_variant.id")
+      .innerJoin("price_set", "price_set.id", "product_variant_price_set.price_set_id")
+      .innerJoin("price", "price.price_set_id", "price_set.id")
+      .leftJoin("price_list", "price_list.id", "price.price_list_id")
+      .whereIn("product_variant.product_id", allProductIds)
+      .whereNull("product_variant.deleted_at")
+      .whereNull("product_variant_price_set.deleted_at")
+      .whereNull("price_set.deleted_at")
+      .whereNull("price.deleted_at")
+      .groupBy("product_variant.product_id")
+
+    for (const row of priceRows) {
+      priceMap.set(row.product_id, {
+        sale_price: row.sale_price,
+        regular_price: row.regular_price,
+        sale_currency: row.sale_currency,
+        regular_currency: row.regular_currency,
+      })
+    }
+  }
+
   const titles = (pkg.titles ?? [])
     .sort(sortByOrder)
     .map((title: any) => ({
@@ -100,10 +132,31 @@ export async function GET(
             custom?.show_price ??
             p.product_custom?.[0]?.show_price ?? false
 
-          const variants = p.variants ?? []
-          const firstVariant = variants[0]
-          const prices = firstVariant?.prices ?? []
-          const firstPrice = prices[0]
+          // Use SQL-computed prices: sale price takes priority over regular price
+          const priceInfo = priceMap.get(p.id)
+          let calculatedPrice: number | null = null
+          let originalPrice: number | null = null
+          let currencyCode: string | null = null
+          let priceType: string | null = null
+          let percentageDiff: number | null = null
+
+          if (priceInfo) {
+            if (priceInfo.sale_price != null) {
+              calculatedPrice = priceInfo.sale_price
+              currencyCode = priceInfo.sale_currency
+              originalPrice = priceInfo.regular_price
+              priceType = "sale"
+              if (originalPrice && originalPrice > 0) {
+                percentageDiff = Math.round(
+                  ((originalPrice - calculatedPrice) / originalPrice) * 100
+                )
+              }
+            } else if (priceInfo.regular_price != null) {
+              calculatedPrice = priceInfo.regular_price
+              currencyCode = priceInfo.regular_currency
+              priceType = "default"
+            }
+          }
 
           return {
             id: p.id,
@@ -116,10 +169,13 @@ export async function GET(
             description_ar: arLocalization.description ?? null,
             moq,
             show_price: showPrice,
-            price: firstPrice
+            price: calculatedPrice != null
               ? {
-                  amount: firstPrice.amount,
-                  currency_code: firstPrice.currency_code,
+                  amount: calculatedPrice,
+                  currency_code: currencyCode,
+                  original_amount: originalPrice,
+                  price_type: priceType,
+                  percentage_diff: percentageDiff,
                 }
               : null,
           }
