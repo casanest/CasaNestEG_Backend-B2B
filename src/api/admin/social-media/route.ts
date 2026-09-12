@@ -4,6 +4,7 @@ import {
 } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { createSocialMediaWorkflow } from "../../../workflows/social-media/create-social-media"
+import { revalidateStorefrontTag } from "../../../lib/revalidate-storefront"
 import type { PostAdminSocialMediaSchema } from "./validators"
 
 export async function GET(
@@ -40,6 +41,8 @@ export async function POST(
   const { result } = await createSocialMediaWorkflow(req.scope).run({
     input: req.validatedBody as any,
   })
+
+  await revalidateStorefrontTag("social-media")
 
   res.json({ socialMedia: result.socialMedia })
 }

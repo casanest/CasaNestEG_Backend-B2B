@@ -1,4 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { revalidateStorefrontTag } from "../../../lib/revalidate-storefront"
 
 const REVALIDATE_TAGS = [
   "products",
@@ -9,15 +10,16 @@ const REVALIDATE_TAGS = [
   "collections",
   "regions",
   "categories",
+  "social-media",
 ]
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const frontendUrl = process.env.FRONTEND_URL
   const secret = process.env.REVALIDATE_SECRET
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:8001"
 
-  if (!secret) {
+  if (!frontendUrl || !secret) {
     res.status(500).json({
-      error: "REVALIDATE_SECRET is not set in backend environment",
+      error: "FRONTEND_URL or REVALIDATE_SECRET is not set in backend environment",
     })
     return
   }
@@ -26,23 +28,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   for (const tag of REVALIDATE_TAGS) {
     try {
-      const url = `${frontendUrl}/api/revalidate?secret=${encodeURIComponent(
-        secret
-      )}&tag=${encodeURIComponent(tag)}`
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        const text = await response.text()
-        results.push({ tag, success: false, error: text })
-      } else {
-        results.push({ tag, success: true })
-      }
+      await revalidateStorefrontTag(tag)
+      results.push({ tag, success: true })
     } catch (error) {
       results.push({
         tag,

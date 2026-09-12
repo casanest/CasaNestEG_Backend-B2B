@@ -5,6 +5,7 @@ import {
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { updateSocialMediaWorkflow } from "../../../../workflows/social-media/update-social-media"
 import { deleteSocialMediaWorkflow } from "../../../../workflows/social-media/delete-social-media"
+import { revalidateStorefrontTag } from "../../../../lib/revalidate-storefront"
 import type { PostAdminSocialMediaUpdateSchema } from "../validators"
 
 export async function GET(
@@ -49,6 +50,8 @@ export async function POST(
     },
   })
 
+  await revalidateStorefrontTag("social-media")
+
   res.json({ socialMedia: result.socialMedia })
 }
 
@@ -60,6 +63,8 @@ export async function DELETE(
   await deleteSocialMediaWorkflow(req.scope).run({
     input: { id },
   })
+
+  await revalidateStorefrontTag("social-media")
 
   res.json({ id })
 }
