@@ -162,6 +162,11 @@ class PayMobPaymentProcessor extends AbstractPaymentProcessor {
       // Generate payment URL based on method
       const paymentUrl = this.generatePaymentUrl(paymentData.payment_method, paymentToken)
 
+      const customerEmail = email || customer?.email
+      if (!customerEmail) {
+        return this.buildError("Customer email is required for payment processing", "MISSING_EMAIL")
+      }
+
       const sessionData: PayMobPaymentData = {
         payment_method: paymentData.payment_method,
         payment_token: paymentToken,
@@ -170,7 +175,7 @@ class PayMobPaymentProcessor extends AbstractPaymentProcessor {
         phone_number: paymentData.phone_number,
         customer_name:
           customer?.first_name && customer?.last_name ? `${customer.first_name} ${customer.last_name}` : "Customer",
-        customer_email: email || customer?.email || "customer@example.com",
+        customer_email: customerEmail,
       }
 
       this.logger.info("PayMob payment initiated successfully", {
@@ -407,9 +412,14 @@ class PayMobPaymentProcessor extends AbstractPaymentProcessor {
     email?: string,
   ): Promise<string> {
     return this.executeWithRetry(async () => {
+      const customerEmail = email || customer?.email
+      if (!customerEmail) {
+        throw new Error("Customer email is required for payment processing")
+      }
+
       const billingData = {
         apartment: "NA",
-        email: email || customer?.email || "customer@example.com",
+        email: customerEmail,
         floor: "NA",
         first_name: customer?.first_name || "Customer",
         street: "NA",

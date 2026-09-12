@@ -70,7 +70,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
         if (response.ok) {
           const responseText = await response.text()
-          logger.info(`Successful response from ${endpoint}: ${responseText}`)
+          logger.info(`Successful response from ${endpoint}`)
           
           try {
             chargeData = JSON.parse(responseText)
@@ -100,17 +100,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       return res.status(404).json({
         success: false,
         error: "Charge not found in Tap system",
-        details: {
-          charge_id: chargeId,
-          attempted_endpoints: endpoints,
-          last_error: lastError,
-          suggestions: [
-            "Verify the charge ID is correct",
-            "Check if the charge exists in your Tap dashboard",
-            "Ensure the charge was created with the correct API key",
-            "Try using the transaction ID instead of charge ID"
-          ]
-        }
+        charge_id: chargeId,
       })
     }
 
@@ -126,9 +116,6 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       created: chargeData.created,
       metadata: chargeData.metadata,
       reference: chargeData.reference,
-      customer: chargeData.customer,
-      source: chargeData.source,
-      response: chargeData.response,
       verified_at: new Date().toISOString(),
       verified_via: successfulEndpoint,
       is_successful: chargeData.status === "CAPTURED" || chargeData.status === "AUTHORIZED",

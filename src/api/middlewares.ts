@@ -94,6 +94,11 @@ export default defineMiddlewares({
     middlewares: [validateAndTransformBody(PostProductCustomSchema)],
   },
   {
+    matcher: '/admin/products/batch-import',
+    method: 'POST',
+    middlewares: [upload.single('file')],
+  },
+  {
     matcher: '/admin/products',
     method: 'GET',
     middlewares: [attachProductCustomFields],

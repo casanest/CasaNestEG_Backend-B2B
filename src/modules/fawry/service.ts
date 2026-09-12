@@ -283,13 +283,18 @@ class FawryPaymentProviderService extends AbstractPaymentProvider<Options> {
         referenceNumber
       )
 
+      const customerEmail = fawryContext.customer_email
+      if (!customerEmail) {
+        throw new Error("Customer email is required for payment processing")
+      }
+
       const sessionData: FawryPaymentData = {
         payment_method: fawryContext.payment_method,
         reference_code: referenceNumber,
         fawry_ref_number: chargeResult.fawryRefNumber,
         phone_number: fawryContext.phone_number,
         customer_name: fawryContext.customer_name || "Customer",
-        customer_email: fawryContext.customer_email || "customer@example.com",
+        customer_email: customerEmail,
         amount: amountInEGP,
         currency: "EGP",
         expiration_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -459,7 +464,10 @@ class FawryPaymentProviderService extends AbstractPaymentProvider<Options> {
     const customerName = billingAddress?.first_name && billingAddress?.last_name
       ? `${billingAddress.first_name} ${billingAddress.last_name}`
       : "Customer"
-    const customerEmail = email || "customer@example.com"
+    const customerEmail = email
+    if (!customerEmail) {
+      throw new Error("Customer email is required for payment processing")
+    }
     const customerMobile = paymentData.phone_number || "01000000000"
 
     // Generate signature

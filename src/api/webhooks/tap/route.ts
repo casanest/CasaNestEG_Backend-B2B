@@ -105,9 +105,12 @@ export async function processWebhook(payload: TapWebhookPayload, logger: any) {
     if (payload.status === "CAPTURED" || payload.status === "AUTHORIZED") {
       logger.info(`Payment successful - processing order: charge_id=${payload.id}, cart_id=${cartId}, status=${payload.status}, amount=${payload.amount}`)
       
+      const backendUrl = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+      const publishableKey = process.env.MEDUSA_PUBLISHABLE_KEY || ""
+
       try {
         // First, ensure the cart has a shipping method
-        const cartResponse = await fetch(`http://localhost:9000/store/carts/${cartId}`, {
+        const cartResponse = await fetch(`${backendUrl}/store/carts/${cartId}`, {
           method: "GET",
           headers: {
             "x-publishable-api-key": process.env.MEDUSA_PUBLISHABLE_KEY || "",
@@ -127,7 +130,7 @@ export async function processWebhook(payload: TapWebhookPayload, logger: any) {
             
             try {
               // Get available shipping options
-              const shippingResponse = await fetch(`http://localhost:9000/store/shipping-options?cart_id=${cartId}`, {
+              const shippingResponse = await fetch(`${backendUrl}/store/shipping-options?cart_id=${cartId}`, {
                 method: "GET",
                 headers: {
                   "x-publishable-api-key": process.env.MEDUSA_PUBLISHABLE_KEY || "",
@@ -145,7 +148,7 @@ export async function processWebhook(payload: TapWebhookPayload, logger: any) {
 
                 if (standardShipping) {
                   // Set the shipping method automatically
-                  const setShippingResponse = await fetch(`http://localhost:9000/store/carts/${cartId}/shipping-methods`, {
+                  const setShippingResponse = await fetch(`${backendUrl}/store/carts/${cartId}/shipping-methods`, {
                     method: "POST",
                     headers: {
                       "x-publishable-api-key": process.env.MEDUSA_PUBLISHABLE_KEY || "",
@@ -178,7 +181,7 @@ export async function processWebhook(payload: TapWebhookPayload, logger: any) {
               logger.info(`Updating payment collection ${cart.payment_collection.id} status to paid`)
               
               // Try to authorize the payment collection
-              const authorizeResponse = await fetch(`http://localhost:9000/store/payment-collections/${cart.payment_collection.id}/authorize`, {
+              const authorizeResponse = await fetch(`${backendUrl}/store/payment-collections/${cart.payment_collection.id}/authorize`, {
                 method: "POST",
                 headers: {
                   "x-publishable-api-key": process.env.MEDUSA_PUBLISHABLE_KEY || "",
@@ -199,7 +202,7 @@ export async function processWebhook(payload: TapWebhookPayload, logger: any) {
             
             // Now try to complete the cart with the payment collection
             logger.info(`Attempting cart completion with payment collection`)
-            const completeResponse = await fetch(`http://localhost:9000/store/carts/${cartId}/complete`, {
+            const completeResponse = await fetch(`${backendUrl}/store/carts/${cartId}/complete`, {
               method: "POST",
               headers: {
                 "x-publishable-api-key": process.env.MEDUSA_PUBLISHABLE_KEY || "",
@@ -236,7 +239,7 @@ export async function processWebhook(payload: TapWebhookPayload, logger: any) {
               
               // If that fails, try without payment session (this will likely fail but worth trying)
               logger.info(`Trying cart completion without payment session as final fallback...`)
-              const fallbackResponse = await fetch(`http://localhost:9000/store/carts/${cartId}/complete`, {
+              const fallbackResponse = await fetch(`${backendUrl}/store/carts/${cartId}/complete`, {
                 method: "POST",
                 headers: {
                   "x-publishable-api-key": process.env.MEDUSA_PUBLISHABLE_KEY || "",

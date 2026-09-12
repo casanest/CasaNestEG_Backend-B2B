@@ -162,6 +162,11 @@ class FawryPaymentProcessor extends AbstractPaymentProcessor {
       // Generate payment instructions
       const instructions = this.generatePaymentInstructions(paymentData.payment_method, referenceNumber)
 
+      const customerEmail = email || customer?.email
+      if (!customerEmail) {
+        return this.buildError("Customer email is required for payment processing", "MISSING_EMAIL")
+      }
+
       const sessionData: FawryPaymentData = {
         payment_method: paymentData.payment_method,
         reference_code: referenceNumber,
@@ -169,7 +174,7 @@ class FawryPaymentProcessor extends AbstractPaymentProcessor {
         phone_number: paymentData.phone_number,
         customer_name:
           customer?.first_name && customer?.last_name ? `${customer.first_name} ${customer.last_name}` : "Customer",
-        customer_email: email || customer?.email || "customer@example.com",
+        customer_email: customerEmail,
         amount: amountInEGP,
         currency: "EGP",
         expiration_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -400,7 +405,10 @@ class FawryPaymentProcessor extends AbstractPaymentProcessor {
 
     const customerName =
       customer?.first_name && customer?.last_name ? `${customer.first_name} ${customer.last_name}` : "Customer"
-    const customerEmail = email || customer?.email || "customer@example.com"
+    const customerEmail = email || customer?.email
+    if (!customerEmail) {
+      throw new Error("Customer email is required for payment processing")
+    }
     const customerMobile = paymentData.phone_number || "01000000000"
 
     // Generate signature

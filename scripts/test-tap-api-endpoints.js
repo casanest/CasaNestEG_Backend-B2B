@@ -5,7 +5,7 @@
  */
 
 const BACKEND_URL = process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000'
-const PUBLISHABLE_KEY = "pk_b6506c82ccf0efc8c0aee9bf71f1183f6c98835c80417bae4044364f0e6a2408"
+const PUBLISHABLE_KEY = process.env.MEDUSA_PUBLISHABLE_KEY || ""
 
 // Test data from the success URL
 const testData = {

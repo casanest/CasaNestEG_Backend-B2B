@@ -2,7 +2,14 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve("logger")
-  
+
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({
+      success: false,
+      error: "This endpoint is not available in production"
+    })
+  }
+
   try {
     // This is the specific case from the success URL
     const testPayload = {

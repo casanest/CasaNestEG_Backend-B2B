@@ -81,7 +81,6 @@ class PaymobPaymentProvider extends AbstractPaymentProvider {
     options.public_key= String(process.env.PAYMOB_PUBLIC_KEY) 
     options.secret_key = String(process.env.PAYMOB_SECRET_KEY)
     options.integration_ids = [Number(process.env.PAYMOB_CARD_INTEGRATION_ID)]
-    console.log(String(process.env.PAYMOB_PUBLIC_KEY) , String(process.env.PAYMOB_SECRET_KEY)) 
     super(container, options)
 
     if (!options.secret_key || !options.public_key) {

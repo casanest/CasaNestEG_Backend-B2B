@@ -10,6 +10,14 @@ export async function POST(
   req: MedusaRequest<CreateTestRequest>,
   res: MedusaResponse
 ): Promise<void> {
+  if (process.env.NODE_ENV === "production") {
+    res.status(403).json({
+      success: false,
+      error: "This endpoint is not available in production"
+    })
+    return
+  }
+
   const { message } = req.body
 
   if (!message) {
