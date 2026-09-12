@@ -109,18 +109,37 @@ export async function POST(
 
   const categoryMap = new Map<string, string>()
   if (allCategoryHandles.size > 0) {
+    const handleList = Array.from(allCategoryHandles)
     const categories = await productModule.listProductCategories(
-      { handle: Array.from(allCategoryHandles) },
-      { select: ["id", "handle"] }
+      { handle: handleList },
+      { select: ["id", "handle", "name"] }
     )
     for (const cat of categories) {
       categoryMap.set(cat.handle, cat.id)
+    }
+
+    // For any handles not found, try matching by name (case-insensitive)
+    const foundHandles = new Set(categories.map((c: any) => c.handle))
+    const unmatched = handleList.filter((h) => !foundHandles.has(h))
+    if (unmatched.length > 0) {
+      const allCategories = await productModule.listProductCategories(
+        {},
+        { select: ["id", "handle", "name"] }
+      )
+      const lowerUnmatched = unmatched.map((h) => h.toLowerCase())
+      for (const cat of allCategories) {
+        if (cat.name && lowerUnmatched.includes((cat.name as string).toLowerCase())) {
+          categoryMap.set(cat.name, cat.id)
+          categoryMap.set((cat.name as string).toLowerCase(), cat.id)
+        }
+      }
     }
   }
 
   // Build product payloads and custom data map
   const products: any[] = []
   const customDataMap: Record<string, CustomData> = {}
+  const discountRows: { sku: string; price_after: number }[] = []
 
   for (const [handle, groupRows] of grouped.entries()) {
     if (existingHandles.has(handle)) continue
@@ -134,7 +153,7 @@ export async function POST(
       .filter(Boolean)
 
     const categories = catHandles
-      .map((h) => categoryMap.get(h))
+      .map((h) => categoryMap.get(h) || categoryMap.get(h.toLowerCase()))
       .filter(Boolean)
       .map((id) => ({ id }))
 
@@ -187,6 +206,11 @@ export async function POST(
         options: variantOptions,
         manage_inventory: false,
         allow_backorder: true,
+      }
+
+      const priceAfter = parseNumber(row.price_after)
+      if (priceAfter !== undefined && row.variant_sku) {
+        discountRows.push({ sku: row.variant_sku, price_after: priceAfter })
       }
 
       return variant
@@ -276,10 +300,135 @@ export async function POST(
     },
   })
 
+  // Step 3: Add discount prices to a sale-type Price List for variants with price_after
+  const debugInfo: any = { discountRows }
+
+  if (discountRows.length > 0) {
+    try {
+      const variantIdBySku = new Map<string, string>()
+      for (const product of createdProducts) {
+        for (const variant of product.variants ?? []) {
+          if (variant.sku) variantIdBySku.set(variant.sku, variant.id)
+        }
+      }
+
+      debugInfo.variantIdBySku = Array.from(variantIdBySku.entries())
+      debugInfo.createdProductVariants = createdProducts.map((p: any) => ({
+        id: p.id,
+        handle: p.handle,
+        variants: (p.variants ?? []).map((v: any) => ({ id: v.id, sku: v.sku })),
+      }))
+
+      const variantIds = discountRows
+        .map((dr) => variantIdBySku.get(dr.sku))
+        .filter(Boolean) as string[]
+
+      debugInfo.variantIds = variantIds
+
+      if (variantIds.length > 0) {
+        // Get price_set_id for each variant via remoteQuery
+        const remoteQuery = req.scope.resolve("remoteQuery")
+        const variantPriceLinks = await remoteQuery({
+          entryPoint: "product_variant_price_set",
+          fields: ["variant_id", "price_set_id"],
+          variables: { variant_id: variantIds },
+        })
+
+        debugInfo.variantPriceLinks = variantPriceLinks
+
+        const variantPriceSetMap = new Map<string, string>()
+        for (const link of variantPriceLinks) {
+          variantPriceSetMap.set(link.variant_id, link.price_set_id)
+        }
+
+        // Build price list prices using price_set_id (required by addPriceListPrices)
+        const pricesToAdd: { amount: number; currency_code: string; price_set_id: string }[] = []
+        for (const dr of discountRows) {
+          const variantId = variantIdBySku.get(dr.sku)
+          if (!variantId) continue
+          const priceSetId = variantPriceSetMap.get(variantId)
+          if (!priceSetId) continue
+          for (const cc of currencyCodes) {
+            pricesToAdd.push({
+              amount: dr.price_after,
+              currency_code: cc,
+              price_set_id: priceSetId,
+            })
+          }
+        }
+
+        debugInfo.pricesToAdd = pricesToAdd
+
+        if (pricesToAdd.length > 0) {
+          const pricingModule = req.scope.resolve(Modules.PRICING)
+          const existingPriceLists = await pricingModule.listPriceLists()
+          let priceList = existingPriceLists.find(
+            (pl: any) => pl.title === "Discount"
+          )
+
+          debugInfo.existingPriceLists = existingPriceLists.map((pl: any) => ({
+            id: pl.id,
+            title: pl.title,
+            type: pl.type,
+          }))
+
+          if (!priceList) {
+            ;[priceList] = await pricingModule.createPriceLists([
+              {
+                title: "Discount",
+                description: "Discount prices from batch import",
+                type: "sale",
+                status: "active",
+              },
+            ])
+          }
+
+          debugInfo.priceListId = priceList.id
+
+          // Remove ALL existing prices from the Discount price list
+          const existingPricesInList = await pricingModule.listPrices({
+            price_list_id: [priceList.id],
+          })
+          debugInfo.existingPricesInList = existingPricesInList.map((p: any) => ({
+            id: p.id,
+            amount: p.amount,
+            currency_code: p.currency_code,
+          }))
+
+          if (existingPricesInList.length > 0) {
+            await pricingModule.removePrices(
+              existingPricesInList.map((p: any) => p.id)
+            )
+          }
+
+          // Add discount prices directly via pricing module service
+          const addedPrices = await pricingModule.addPriceListPrices([
+            {
+              price_list_id: priceList.id,
+              prices: pricesToAdd,
+            },
+          ])
+
+          debugInfo.addedPrices = addedPrices
+          debugInfo.success = true
+        } else {
+          debugInfo.error = "No prices to add — price_set_id mapping failed"
+        }
+      } else {
+        debugInfo.error = "No variant IDs matched"
+      }
+    } catch (err: any) {
+      debugInfo.error = err?.message || String(err)
+      debugInfo.errorStack = err?.stack
+      console.error("[batch-import] Error adding discount prices:", err)
+    }
+  }
+
   res.json({
     created_count: createdProducts.length,
     skipped_count: skippedHandles.length,
     skipped_handles: skippedHandles,
     products: createdProducts,
+    debug_discount: debugInfo,
   })
 }

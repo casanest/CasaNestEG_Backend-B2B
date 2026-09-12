@@ -8333,13 +8333,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/core@npm:7.120.4":
-  version: 7.120.4
-  resolution: "@sentry/core@npm:7.120.4"
+"@sentry/core@npm:10.74.0":
+  version: 10.74.0
+  resolution: "@sentry/core@npm:10.74.0"
   dependencies:
-    "@sentry/types": 7.120.4
-    "@sentry/utils": 7.120.4
-  checksum: c5d24064c9a2fae34bd13038a20b1ffe04d9a66693d1cfa5a5d25491911e5aebfd5b107433edd081ad845b07da2e384fd8e39ebf46e56f4f49a5717956f5bae6
+    "@sentry/conventions": ^0.16.0
+  checksum: f4a59d1614fdb17c2f2c3a57c51feee0a375710e656395e5d5e848a440d59b4b6279f90effc525ac4fc29a3c7e3e27dee62ceaeb6f6dd69f39522dd6a38fe8cd
   languageName: node
   linkType: hard
 
@@ -8389,22 +8388,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/opentelemetry-node@npm:^7.114.0":
-  version: 7.120.4
-  resolution: "@sentry/opentelemetry-node@npm:7.120.4"
-  dependencies:
-    "@sentry/core": 7.120.4
-    "@sentry/types": 7.120.4
-    "@sentry/utils": 7.120.4
-  peerDependencies:
-    "@opentelemetry/api": 1.x
-    "@opentelemetry/core": 1.x
-    "@opentelemetry/sdk-trace-base": 1.x
-    "@opentelemetry/semantic-conventions": 1.x
-  checksum: e444a9bf8551b6abb7be148ef43a263b376d64c89b9c4fb717e3a96b5b3b65feb1392605b746468df0ffab843ab1b83c4c4017d1dc705cdd081e063a7374358e
-  languageName: node
-  linkType: hard
-
 "@sentry/opentelemetry@npm:10.73.0":
   version: 10.73.0
   resolution: "@sentry/opentelemetry@npm:10.73.0"
@@ -8419,6 +8402,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/opentelemetry@npm:^10.73.0":
+  version: 10.74.0
+  resolution: "@sentry/opentelemetry@npm:10.74.0"
+  dependencies:
+    "@sentry/conventions": ^0.16.0
+    "@sentry/core": 10.74.0
+  peerDependencies:
+    "@opentelemetry/api": ^1.9.0
+    "@opentelemetry/core": ^1.30.1 || ^2.1.0
+    "@opentelemetry/sdk-trace-base": ^1.30.1 || ^2.1.0
+  checksum: 173d51df67377ba933a1fbe5f41d9d7ac01d361c662b1d17a08e0ef52fba80bfd937ea2bb7285ac9d96a6715ab9c2fa40bec68bd7b3b41b2afbcfa12f65c69e9
+  languageName: node
+  linkType: hard
+
 "@sentry/server-utils@npm:10.73.0":
   version: 10.73.0
   resolution: "@sentry/server-utils@npm:10.73.0"
@@ -8426,22 +8423,6 @@ __metadata:
     "@sentry/conventions": ^0.16.0
     "@sentry/core": 10.73.0
   checksum: 97e9045abc82bfdc2793832712cfaaeef8010a8fc57089ab66984bd1fb2dcb872534a0752af7caa2e40227d0127c25e3ee7d1265c6f1a44a9a09f1f76eee4b97
-  languageName: node
-  linkType: hard
-
-"@sentry/types@npm:7.120.4":
-  version: 7.120.4
-  resolution: "@sentry/types@npm:7.120.4"
-  checksum: 33bcd3d489511915827f32d6d509fd50479a80bffbbe195545ed27c82d606658ae66c01ec6494a087503505454adb8b0d7a8c0adb5228b6d45a6ffec3b708dcc
-  languageName: node
-  linkType: hard
-
-"@sentry/utils@npm:7.120.4":
-  version: 7.120.4
-  resolution: "@sentry/utils@npm:7.120.4"
-  dependencies:
-    "@sentry/types": 7.120.4
-  checksum: f02f3b54ec226c02ad2f037ecff73de3631d7b1b06ff55bcfa400545ecbf0f57903f6766684a5d88870d6ceb4dfa87dbb17072f1090cb484924c505fb751d4da
   languageName: node
   linkType: hard
 
@@ -13984,7 +13965,7 @@ __metadata:
     "@opentelemetry/semantic-conventions": 1.x
     "@rokmohar/medusa-plugin-meilisearch": ^1.1.4
     "@sentry/node": ^10.73.0
-    "@sentry/opentelemetry-node": ^7.114.0
+    "@sentry/opentelemetry": ^10.73.0
     "@swc/core": 1.5.7
     "@swc/jest": ^0.2.36
     "@types/jest": ^29.5.13

@@ -42,7 +42,7 @@
     "@opentelemetry/semantic-conventions": "1.x",
     "@rokmohar/medusa-plugin-meilisearch": "^1.1.4",
     "@sentry/node": "^10.73.0",
-    "@sentry/opentelemetry-node": "^7.114.0",
+    "@sentry/opentelemetry": "^10.73.0",
     "awilix": "^8.0.1",
     "lucide-react": "^0.525.0",
     "medusa-plugin-meilisearch": "^2.0.11",

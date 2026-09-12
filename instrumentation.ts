@@ -5,13 +5,11 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc"
 import {
   SentrySpanProcessor,
   SentryPropagator,
-} from "@sentry/opentelemetry-node"
+} from "@sentry/opentelemetry"
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
-  // @ts-ignore
-  instrumenter: "otel",
 })
 
 otelApi.propagation.setGlobalPropagator(new SentryPropagator())
