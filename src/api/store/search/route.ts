@@ -43,9 +43,13 @@ class SearchEngine {
     return await this.#qb;
   }
 
+  private isArabic(text: string): boolean {
+    return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+  }
+
   private applySorting({ order, q }: StoreSearchProductsParamsType) {
     if (order === 'relevance') {
-      if (q) {
+      if (q && !this.isArabic(q)) {
         this.#qb.orderByRaw('ts_rank(searchable_content, plainto_tsquery(?)) DESC', [q]);
       }
     } else {
@@ -70,7 +74,22 @@ class SearchEngine {
     price_to
   }: StoreSearchProductsParamsType) {
     if (q) {
-      this.#qb.whereRaw('searchable_content @@ plainto_tsquery(?)', [q]);
+      if (this.isArabic(q)) {
+        this.#qb.whereRaw(
+          `product.title ILIKE '%' || ? || '%'
+           OR product.description ILIKE '%' || ? || '%'
+           OR product.material ILIKE '%' || ? || '%'
+           OR product.metadata->'localizations'->'ar'->>'title' ILIKE '%' || ? || '%'
+           OR product.metadata->'localizations'->'ar'->>'description' ILIKE '%' || ? || '%'
+           OR product.metadata->'localizations'->'ar'->>'material' ILIKE '%' || ? || '%'
+           OR product.metadata->'localizations'->'ar'->>'subtitle' ILIKE '%' || ? || '%'
+           OR product.metadata->>'title_ar' ILIKE '%' || ? || '%'
+           OR product.metadata->>'description_ar' ILIKE '%' || ? || '%'`,
+          [q, q, q, q, q, q, q, q, q]
+        );
+      } else {
+        this.#qb.whereRaw('searchable_content @@ plainto_tsquery(?)', [q]);
+      }
     }
 
     if (collection_id) {

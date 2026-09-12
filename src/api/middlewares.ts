@@ -20,6 +20,7 @@ import { listAppointmentsQueryConfig } from './admin/appointments/query-config';
 import { PatchAdminAppointment } from './admin/appointments/[id]/validators';
 import { PostProductCustomSchema } from './admin/products/[id]/custom/validators';
 import attachProductCustomFields from './middlewares/attach-product-custom-fields';
+import arabicProductSearch from './middlewares/arabic-product-search';
 import { PostAdminPortfolioCategorySchema, PostAdminPortfolioCategoryUpdateSchema } from './admin/portfolio/categories/validators';
 import { PostAdminPortfolioProjectSchema, PostAdminPortfolioProjectUpdateSchema } from './admin/portfolio/projects/validators';
 import { PostAdminPackageSchema, PostAdminPackageUpdateSchema, PostAdminPackageTitleSchema, PostAdminReorderTitlesSchema } from './admin/packages/validators';
@@ -101,7 +102,7 @@ export default defineMiddlewares({
   {
     matcher: '/admin/products',
     method: 'GET',
-    middlewares: [attachProductCustomFields],
+    middlewares: [attachProductCustomFields, arabicProductSearch],
   },
   {
     matcher: '/admin/products/:id',

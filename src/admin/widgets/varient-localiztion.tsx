@@ -282,10 +282,10 @@ const VariantLocalizationWidget = ({
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Package className="w-5 h-5 text-gray-500" />
+            <Package className="w-5 h-5 text-ui-fg-subtle" />
             <Heading level="h2">Variant Localization</Heading>
             {hasLocalizations && (
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-ui-fg-subtle">
                 ({Object.keys(localizations).length} language{Object.keys(localizations).length !== 1 ? 's' : ''})
               </span>
             )}
@@ -313,12 +313,12 @@ const VariantLocalizationWidget = ({
         </div>
         
         {/* Variant Info */}
-        <div className="mt-3 p-3 bg-gray-50 rounded-md">
+        <div className="mt-3 p-3 bg-ui-bg-subtle rounded-md">
           <div className="text-sm">
-            <div className="font-medium text-gray-900">{variantInfo.title}</div>
-            <div className="text-gray-600">SKU: {variantInfo.sku}</div>
+            <div className="font-medium text-ui-fg-base">{variantInfo.title}</div>
+            <div className="text-ui-fg-subtle">SKU: {variantInfo.sku}</div>
             {variantInfo.optionValues && (
-              <div className="text-gray-600">Options: {variantInfo.optionValues}</div>
+              <div className="text-ui-fg-subtle">Options: {variantInfo.optionValues}</div>
             )}
           </div>
         </div>
@@ -362,15 +362,15 @@ const VariantLocalizationWidget = ({
         {hasLocalizations ? (
           <div className="space-y-6">
             {Object.entries(localizations).map(([languageCode, localization]) => (
-              <div key={languageCode} className="border rounded-lg p-4 bg-gray-50">
+              <div key={languageCode} className="border border-ui-border-base rounded-lg p-4 bg-ui-bg-base">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-700">
+                    <div className="w-8 h-8 bg-ui-bg-base rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-ui-fg-base">
                         {languageCode.toUpperCase()}
                       </span>
                     </div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-ui-fg-base">
                       {getLanguageLabel(languageCode)}
                     </h3>
                   </div>
@@ -379,7 +379,7 @@ const VariantLocalizationWidget = ({
                     size="small"
                     onClick={() => handleRemoveLanguage(languageCode)}
                     disabled={isUpdating}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-ui-tag-red-text"
                   >
                     <Trash className="w-4 h-4" />
                   </Button>
@@ -388,7 +388,7 @@ const VariantLocalizationWidget = ({
                 <div className="space-y-4">
                   {/* Title input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ui-fg-base mb-1">
                       Variant Title *
                     </label>
                     <Input
@@ -402,7 +402,7 @@ const VariantLocalizationWidget = ({
 
                   {/* Description input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ui-fg-base mb-1">
                       Description
                     </label>
                     <Textarea
@@ -418,7 +418,7 @@ const VariantLocalizationWidget = ({
                   {/* Additional fields in a grid */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Material
                       </label>
                       <Input
@@ -431,7 +431,7 @@ const VariantLocalizationWidget = ({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Color
                       </label>
                       <Input
@@ -444,7 +444,7 @@ const VariantLocalizationWidget = ({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Size
                       </label>
                       <Input
@@ -457,7 +457,7 @@ const VariantLocalizationWidget = ({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ui-fg-base mb-1">
                         Style
                       </label>
                       <Input
@@ -472,7 +472,7 @@ const VariantLocalizationWidget = ({
 
                   {/* Notes */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ui-fg-base mb-1">
                       Notes
                     </label>
                     <Textarea
@@ -490,14 +490,14 @@ const VariantLocalizationWidget = ({
           </div>
         ) : (
           <div className="text-center py-12">
-            <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Globe className="w-12 h-12 text-ui-fg-muted mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-ui-fg-base mb-2">
               No Localizations Added
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-ui-fg-subtle mb-4">
               Add translations for your variant title and attributes in different languages.
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-ui-fg-muted">
               Select a language from the dropdown above to get started.
             </p>
           </div>
@@ -505,7 +505,7 @@ const VariantLocalizationWidget = ({
 
         {/* Save button at bottom */}
         {hasLocalizations && hasChanges && (
-          <div className="mt-6 pt-4 border-t">
+          <div className="mt-6 pt-4 border-t border-ui-border-base">
             <Button
               variant="primary"
               onClick={handleSaveLocalizations}
@@ -529,17 +529,17 @@ const VariantLocalizationWidget = ({
 
         {/* Metadata storage info */}
         {hasLocalizations && (
-          <div className="mt-6 p-3 bg-blue-50 rounded-md">
+          <div className="mt-6 p-3 bg-ui-bg-subtle rounded-md">
             <div className="flex items-start">
-              <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
-              <div className="text-xs text-blue-700">
+              <AlertCircle className="w-4 h-4 text-ui-fg-subtle mt-0.5 mr-2 flex-shrink-0" />
+              <div className="text-xs text-ui-fg-base">
                 <p className="font-medium mb-1">Metadata Storage</p>
-                <ul className="space-y-1 text-blue-600">
+                <ul className="space-y-1 text-ui-fg-subtle">
                   <li>• <code>localizations</code> - Object containing all translations</li>
                   <li>• <code>available_languages</code> - Array of language codes</li>
                   <li>• <code>localization_updated_at</code> - Last update timestamp</li>
                 </ul>
-                <p className="mt-2 text-blue-600">
+                <p className="mt-2 text-ui-fg-subtle">
                   Each language contains: <code>title</code>, <code>description</code>, <code>material</code>, <code>color</code>, <code>size</code>, <code>style</code>, and <code>notes</code> fields
                 </p>
               </div>
@@ -549,12 +549,12 @@ const VariantLocalizationWidget = ({
 
         {/* Current metadata display */}
         {hasLocalizations && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-md">
+          <div className="mt-4 p-3 bg-ui-bg-subtle rounded-md">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-ui-fg-base mb-1">
                 Current Localization Data
               </label>
-              <pre className="text-xs text-gray-600 overflow-x-auto p-2 bg-white rounded border max-h-32">
+              <pre className="text-xs text-ui-fg-subtle overflow-x-auto p-2 bg-ui-bg-base rounded border border-ui-border-base max-h-32">
                 {JSON.stringify(localizations, null, 2)}
               </pre>
             </div>

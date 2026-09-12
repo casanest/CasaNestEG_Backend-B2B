@@ -282,10 +282,10 @@ const CategoryLocalizationWidget = ({
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <FolderOpen className="w-5 h-5 text-gray-500" />
+            <FolderOpen className="w-5 h-5 text-ui-fg-subtle" />
             <Heading level="h2">Category Localization</Heading>
             {hasLocalizations && (
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-ui-fg-subtle">
                 ({Object.keys(localizations).length} language{Object.keys(localizations).length !== 1 ? 's' : ''})
               </span>
             )}
@@ -313,26 +313,26 @@ const CategoryLocalizationWidget = ({
         </div>
         
         {/* Category Info */}
-        <div className="mt-3 p-3 bg-gray-50 rounded-md">
+        <div className="mt-3 p-3 bg-ui-bg-subtle rounded-md">
           <div className="text-sm">
-            <div className="font-medium text-gray-900 flex items-center gap-2">
+            <div className="font-medium text-ui-fg-base flex items-center gap-2">
               {categoryInfo.name}
               <div className="flex gap-1">
                 {categoryInfo.isActive && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">Active</span>
+                  <span className="px-2 py-1 bg-ui-tag-green-bg text-ui-tag-green-text rounded text-xs">Active</span>
                 )}
                 {categoryInfo.isInternal && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">Internal</span>
+                  <span className="px-2 py-1 bg-ui-tag-blue-bg text-ui-tag-blue-text rounded text-xs">Internal</span>
                 )}
               </div>
             </div>
-            <div className="text-gray-600">Handle: {categoryInfo.handle}</div>
-            <div className="text-gray-600">Rank: {categoryInfo.rank}</div>
+            <div className="text-ui-fg-subtle">Handle: {categoryInfo.handle}</div>
+            <div className="text-ui-fg-subtle">Rank: {categoryInfo.rank}</div>
             {categoryInfo.hasParent && (
-              <div className="text-gray-600">Has parent category</div>
+              <div className="text-ui-fg-subtle">Has parent category</div>
             )}
             {categoryInfo.hasChildren && (
-              <div className="text-gray-600">Has child categories</div>
+              <div className="text-ui-fg-subtle">Has child categories</div>
             )}
           </div>
         </div>
@@ -376,15 +376,15 @@ const CategoryLocalizationWidget = ({
         {hasLocalizations ? (
           <div className="space-y-6">
             {Object.entries(localizations).map(([languageCode, localization]) => (
-              <div key={languageCode} className="border rounded-lg p-4 bg-gray-50">
+              <div key={languageCode} className="border border-ui-border-base rounded-lg p-4 bg-ui-bg-base">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-700">
+                    <div className="w-8 h-8 bg-ui-bg-base rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-ui-fg-base">
                         {languageCode.toUpperCase()}
                       </span>
                     </div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-ui-fg-base">
                       {getLanguageLabel(languageCode)}
                     </h3>
                   </div>
@@ -393,7 +393,7 @@ const CategoryLocalizationWidget = ({
                     size="small"
                     onClick={() => handleRemoveLanguage(languageCode)}
                     disabled={isUpdating}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-ui-tag-red-text"
                   >
                     <Trash className="w-4 h-4" />
                   </Button>
@@ -402,7 +402,7 @@ const CategoryLocalizationWidget = ({
                 <div className="space-y-4">
                   {/* Name input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ui-fg-base mb-1">
                       Category Name *
                     </label>
                     <Input
@@ -416,7 +416,7 @@ const CategoryLocalizationWidget = ({
 
                   {/* Description input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ui-fg-base mb-1">
                       Description
                     </label>
                     <Textarea
@@ -431,7 +431,7 @@ const CategoryLocalizationWidget = ({
 
                   {/* Handle input */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ui-fg-base mb-1">
                       Handle (URL slug)
                     </label>
                     <Input
@@ -444,12 +444,12 @@ const CategoryLocalizationWidget = ({
                   </div>
 
                   {/* SEO Fields */}
-                  <div className="border-t pt-4">
-                    <h4 className="font-medium text-gray-900 mb-3">SEO Settings</h4>
+                  <div className="border-t border-ui-border-base pt-4">
+                    <h4 className="font-medium text-ui-fg-base mb-3">SEO Settings</h4>
                     
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Meta Title
                         </label>
                         <Input
@@ -462,7 +462,7 @@ const CategoryLocalizationWidget = ({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           Meta Description
                         </label>
                         <Textarea
@@ -476,7 +476,7 @@ const CategoryLocalizationWidget = ({
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ui-fg-base mb-1">
                           SEO Keywords
                         </label>
                         <Input
@@ -495,14 +495,14 @@ const CategoryLocalizationWidget = ({
           </div>
         ) : (
           <div className="text-center py-12">
-            <Globe className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Globe className="w-12 h-12 text-ui-fg-muted mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-ui-fg-base mb-2">
               No Localizations Added
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-ui-fg-subtle mb-4">
               Add translations for your category name, description, and SEO content in different languages.
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-ui-fg-muted">
               Select a language from the dropdown above to get started.
             </p>
           </div>
@@ -510,7 +510,7 @@ const CategoryLocalizationWidget = ({
 
         {/* Save button at bottom */}
         {hasLocalizations && hasChanges && (
-          <div className="mt-6 pt-4 border-t">
+          <div className="mt-6 pt-4 border-t border-ui-border-base">
             <Button
               variant="primary"
               onClick={handleSaveLocalizations}
@@ -534,17 +534,17 @@ const CategoryLocalizationWidget = ({
 
         {/* Metadata storage info */}
         {hasLocalizations && (
-          <div className="mt-6 p-3 bg-blue-50 rounded-md">
+          <div className="mt-6 p-3 bg-ui-bg-subtle rounded-md">
             <div className="flex items-start">
-              <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
-              <div className="text-xs text-blue-700">
+              <AlertCircle className="w-4 h-4 text-ui-fg-subtle mt-0.5 mr-2 flex-shrink-0" />
+              <div className="text-xs text-ui-fg-base">
                 <p className="font-medium mb-1">Metadata Storage</p>
-                <ul className="space-y-1 text-blue-600">
+                <ul className="space-y-1 text-ui-fg-subtle">
                   <li>• <code>localizations</code> - Object containing all translations</li>
                   <li>• <code>available_languages</code> - Array of language codes</li>
                   <li>• <code>localization_updated_at</code> - Last update timestamp</li>
                 </ul>
-                <p className="mt-2 text-blue-600">
+                <p className="mt-2 text-ui-fg-subtle">
                   Each language contains: <code>name</code>, <code>description</code>, <code>handle</code>, <code>meta_title</code>, <code>meta_description</code>, and <code>seo_keywords</code> fields
                 </p>
               </div>
@@ -554,12 +554,12 @@ const CategoryLocalizationWidget = ({
 
         {/* Current metadata display */}
         {hasLocalizations && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-md">
+          <div className="mt-4 p-3 bg-ui-bg-subtle rounded-md">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-ui-fg-base mb-1">
                 Current Localization Data
               </label>
-              <pre className="text-xs text-gray-600 overflow-x-auto p-2 bg-white rounded border max-h-32">
+              <pre className="text-xs text-ui-fg-subtle overflow-x-auto p-2 bg-ui-bg-base rounded border border-ui-border-base max-h-32">
                 {JSON.stringify(localizations, null, 2)}
               </pre>
             </div>
