@@ -5,6 +5,7 @@ export const PostProductCustomSchema = z.object({
   moq: z.number().int().min(1).optional(),
   is_in_homepage: z.boolean().optional(),
   show_price: z.boolean().optional(),
+  show_document: z.boolean().optional(),
 })
 
 export type PostProductCustomSchema = z.infer<typeof PostProductCustomSchema>

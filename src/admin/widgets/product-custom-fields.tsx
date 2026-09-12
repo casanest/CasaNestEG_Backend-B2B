@@ -11,6 +11,7 @@ const ProductCustomFieldsWidget = ({
   const [documentUrl, setDocumentUrl] = useState<string>("")
   const [isInHomepage, setIsInHomepage] = useState<boolean>(false)
   const [showPrice, setShowPrice] = useState<boolean>(false)
+  const [showDocument, setShowDocument] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -32,6 +33,7 @@ const ProductCustomFieldsWidget = ({
       setDocumentUrl(result.product_custom?.document_url ?? "")
       setIsInHomepage(result.product_custom?.is_in_homepage ?? false)
       setShowPrice(result.product_custom?.show_price ?? false)
+      setShowDocument(result.product_custom?.show_document ?? false)
     } catch (error) {
       console.error("Error loading custom fields:", error)
     } finally {
@@ -128,6 +130,7 @@ const ProductCustomFieldsWidget = ({
           document_url: documentUrl || null,
           is_in_homepage: newValue,
           show_price: showPrice,
+          show_document: showDocument,
         }),
       })
 
@@ -138,6 +141,7 @@ const ProductCustomFieldsWidget = ({
       const result = await response.json()
       setIsInHomepage(result.product_custom?.is_in_homepage ?? newValue)
       setShowPrice(result.product_custom?.show_price ?? showPrice)
+      setShowDocument(result.product_custom?.show_document ?? showDocument)
 
       toast.success(`Product ${newValue ? "added to" : "removed from"} homepage`)
     } catch (error) {
@@ -145,7 +149,7 @@ const ProductCustomFieldsWidget = ({
       toast.error("Failed to update homepage status")
       setIsInHomepage(!newValue)
     }
-  }, [data.id, moq, documentUrl, showPrice])
+  }, [data.id, moq, documentUrl, showPrice, showDocument])
 
   const handleToggleShowPrice = useCallback(async (newValue: boolean) => {
     setShowPrice(newValue)
@@ -161,6 +165,7 @@ const ProductCustomFieldsWidget = ({
           document_url: documentUrl || null,
           is_in_homepage: isInHomepage,
           show_price: newValue,
+          show_document: showDocument,
         }),
       })
 
@@ -171,6 +176,7 @@ const ProductCustomFieldsWidget = ({
       const result = await response.json()
       setShowPrice(result.product_custom?.show_price ?? newValue)
       setIsInHomepage(result.product_custom?.is_in_homepage ?? isInHomepage)
+      setShowDocument(result.product_custom?.show_document ?? showDocument)
 
       toast.success(`Price ${newValue ? "shown to" : "hidden from"} customers`)
     } catch (error) {
@@ -178,7 +184,42 @@ const ProductCustomFieldsWidget = ({
       toast.error("Failed to update price visibility")
       setShowPrice(!newValue)
     }
-  }, [data.id, moq, documentUrl, isInHomepage])
+  }, [data.id, moq, documentUrl, isInHomepage, showDocument])
+
+  const handleToggleShowDocument = useCallback(async (newValue: boolean) => {
+    setShowDocument(newValue)
+    try {
+      const response = await fetch(`/admin/products/${data.id}/custom`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          moq,
+          document_url: documentUrl || null,
+          is_in_homepage: isInHomepage,
+          show_price: showPrice,
+          show_document: newValue,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Save failed: ${response.status}`)
+      }
+
+      const result = await response.json()
+      setShowDocument(result.product_custom?.show_document ?? newValue)
+      setShowPrice(result.product_custom?.show_price ?? showPrice)
+      setIsInHomepage(result.product_custom?.is_in_homepage ?? isInHomepage)
+
+      toast.success(`Document ${newValue ? "shown to" : "hidden from"} customers`)
+    } catch (error) {
+      console.error("Error toggling show_document:", error)
+      toast.error("Failed to update document visibility")
+      setShowDocument(!newValue)
+    }
+  }, [data.id, moq, documentUrl, isInHomepage, showPrice])
 
   const handleSave = useCallback(async () => {
     setIsSaving(true)
@@ -194,6 +235,7 @@ const ProductCustomFieldsWidget = ({
           document_url: documentUrl || null,
           is_in_homepage: isInHomepage,
           show_price: showPrice,
+          show_document: showDocument,
         }),
       })
 
@@ -208,6 +250,7 @@ const ProductCustomFieldsWidget = ({
       setDocumentUrl(result.product_custom?.document_url ?? "")
       setIsInHomepage(result.product_custom?.is_in_homepage ?? false)
       setShowPrice(result.product_custom?.show_price ?? false)
+      setShowDocument(result.product_custom?.show_document ?? false)
 
       toast.success("Success", {
         description: "Custom fields saved successfully",
@@ -222,7 +265,7 @@ const ProductCustomFieldsWidget = ({
     } finally {
       setIsSaving(false)
     }
-  }, [data.id, moq, documentUrl, isInHomepage, showPrice])
+  }, [data.id, moq, documentUrl, isInHomepage, showPrice, showDocument])
 
   if (isLoading) {
     return (
@@ -318,6 +361,17 @@ const ProductCustomFieldsWidget = ({
           />
           <Label htmlFor="show_price" size="small">
             Show price to customer
+          </Label>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            id="show_document"
+            checked={showDocument}
+            onCheckedChange={(val) => handleToggleShowDocument(val as boolean)}
+          />
+          <Label htmlFor="show_document" size="small">
+            Show document to user
           </Label>
         </div>
 

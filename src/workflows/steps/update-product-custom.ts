@@ -8,6 +8,7 @@ type UpdateProductCustomStepInput = {
   moq?: number
   is_in_homepage?: boolean
   show_price?: boolean
+  show_document?: boolean
 }
 
 export const updateProductCustomStep = createStep(
@@ -30,6 +31,7 @@ export const updateProductCustomStep = createStep(
       if (input.moq !== undefined) updateData.moq = input.moq
       if (input.is_in_homepage !== undefined) updateData.is_in_homepage = input.is_in_homepage
       if (input.show_price !== undefined) updateData.show_price = input.show_price
+      if (input.show_document !== undefined) updateData.show_document = input.show_document
       result = await productCustomModule.updateProductCustoms(updateData)
     } else {
       result = await productCustomModule.createProductCustoms({
@@ -38,6 +40,7 @@ export const updateProductCustomStep = createStep(
         moq: input.moq ?? 1,
         is_in_homepage: input.is_in_homepage ?? false,
         show_price: input.show_price ?? false,
+        show_document: input.show_document ?? false,
       })
     }
 

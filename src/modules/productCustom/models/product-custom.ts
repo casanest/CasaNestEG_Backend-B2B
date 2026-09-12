@@ -7,6 +7,7 @@ const ProductCustom = model.define("product_custom", {
   moq: model.number().default(1),
   is_in_homepage: model.boolean().default(false),
   show_price: model.boolean().default(false),
+  show_document: model.boolean().default(false),
 })
 
 export default ProductCustom

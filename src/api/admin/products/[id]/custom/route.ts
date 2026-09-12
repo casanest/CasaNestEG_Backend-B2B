@@ -28,12 +28,14 @@ export async function GET(
           moq: custom.moq,
           is_in_homepage: custom.is_in_homepage,
           show_price: custom.show_price,
+          show_document: custom.show_document,
         }
       : {
           document_url: null,
           moq: 1,
           is_in_homepage: false,
           show_price: false,
+          show_document: false,
         },
   })
 }
@@ -43,7 +45,7 @@ export async function POST(
   res: MedusaResponse
 ) {
   const { id } = req.params
-  const { document_url, moq, is_in_homepage, show_price } = req.validatedBody
+  const { document_url, moq, is_in_homepage, show_price, show_document } = req.validatedBody
 
   const { result } = await updateProductCustomWorkflow(req.scope).run({
     input: {
@@ -52,6 +54,7 @@ export async function POST(
       moq,
       is_in_homepage,
       show_price,
+      show_document,
     },
   })
 
@@ -63,6 +66,7 @@ export async function POST(
       moq: result.product_custom.moq,
       is_in_homepage: result.product_custom.is_in_homepage,
       show_price: result.product_custom.show_price,
+      show_document: result.product_custom.show_document,
     },
   })
 }
