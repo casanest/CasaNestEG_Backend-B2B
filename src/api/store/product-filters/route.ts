@@ -56,7 +56,7 @@ export async function GET(
       "variants.options.option.title",
     ],
     filters: productFilters,
-    pagination: { limit: 1000 },
+    pagination: { take: 1000 },
   })
 
   console.log("[product-filters] query.graph returned", products.length, "products")
