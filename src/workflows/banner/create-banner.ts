@@ -6,7 +6,7 @@ import { createBannerStep } from "./steps/create-banner"
 
 type CreateBannerWorkflowInput = {
   image_url: string
-  type?: "hero" | "past_customer" | "partners"
+  type?: "hero" | "mobile_hero" | "past_customer" | "partners"
   is_active?: boolean
   display_order?: number
 }

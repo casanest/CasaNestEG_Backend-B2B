@@ -17,7 +17,7 @@ const BannerDetailPage = () => {
   const deleteBanner = useDeleteBanner()
 
   const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [type, setType] = useState<"hero" | "past_customer" | "partners">("hero")
+  const [type, setType] = useState<"hero" | "mobile_hero" | "past_customer" | "partners">("hero")
   const [isActive, setIsActive] = useState(false)
   const [displayOrder, setDisplayOrder] = useState(0)
   const [uploading, setUploading] = useState(false)
@@ -120,12 +120,13 @@ const BannerDetailPage = () => {
 
         <div>
           <Text size="small" weight="plus" className="mb-1">Banner Type</Text>
-          <Select value={type} onValueChange={(val) => setType(val as "hero" | "past_customer" | "partners")}>
+          <Select value={type} onValueChange={(val) => setType(val as "hero" | "mobile_hero" | "past_customer" | "partners")}>
             <Select.Trigger>
               <Select.Value />
             </Select.Trigger>
             <Select.Content>
-              <Select.Item value="hero">Hero Section</Select.Item>
+              <Select.Item value="hero">Hero Section (Desktop)</Select.Item>
+              <Select.Item value="mobile_hero">Hero Section (Mobile)</Select.Item>
               <Select.Item value="past_customer">Past Customer Logo</Select.Item>
               <Select.Item value="partners">Partners</Select.Item>
             </Select.Content>

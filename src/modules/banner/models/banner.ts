@@ -2,6 +2,7 @@ import { model } from "@medusajs/framework/utils"
 
 export const BannerType = {
   HERO: "hero",
+  MOBILE_HERO: "mobile_hero",
   PAST_CUSTOMER: "past_customer",
   PARTNERS: "partners",
 } as const

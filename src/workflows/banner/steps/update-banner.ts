@@ -5,7 +5,7 @@ import BannerModuleService from "../../../modules/banner/service"
 type UpdateBannerStepInput = {
   id: string
   image_url?: string
-  type?: "hero" | "past_customer" | "partners"
+  type?: "hero" | "mobile_hero" | "past_customer" | "partners"
   is_active?: boolean
   display_order?: number
 }

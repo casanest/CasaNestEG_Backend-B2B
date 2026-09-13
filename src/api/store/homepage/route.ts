@@ -101,6 +101,7 @@ export async function GET(
   // Group banners by type
   const banners: Record<string, any[]> = {
     hero: [],
+    mobile_hero: [],
     past_customer: [],
     partners: [],
   }

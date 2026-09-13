@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 export type Banner = {
   id: string
   image_url: string
-  type: "hero" | "past_customer" | "partners"
+  type: "hero" | "mobile_hero" | "past_customer" | "partners"
   is_active: boolean
   display_order: number
   created_at: string
@@ -12,7 +12,7 @@ export type Banner = {
 
 export type CreateBannerInput = {
   image_url: string
-  type?: "hero" | "past_customer" | "partners"
+  type?: "hero" | "mobile_hero" | "past_customer" | "partners"
   is_active?: boolean
   display_order?: number
 }

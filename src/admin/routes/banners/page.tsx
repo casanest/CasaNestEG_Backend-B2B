@@ -98,8 +98,8 @@ const BannersListPage = () => {
                   />
                 </Table.Cell>
                 <Table.Cell>
-                  <StatusBadge color={b.type === "hero" ? "blue" : b.type === "past_customer" ? "purple" : "green"}>
-                    {b.type === "hero" ? "Hero" : b.type === "past_customer" ? "Past Customer" : "Partners"}
+                  <StatusBadge color={b.type === "hero" ? "blue" : b.type === "mobile_hero" ? "orange" : b.type === "past_customer" ? "purple" : "green"}>
+                    {b.type === "hero" ? "Hero (Desktop)" : b.type === "mobile_hero" ? "Hero (Mobile)" : b.type === "past_customer" ? "Past Customer" : "Partners"}
                   </StatusBadge>
                 </Table.Cell>
                 <Table.Cell>{b.display_order}</Table.Cell>
