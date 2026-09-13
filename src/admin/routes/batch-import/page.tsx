@@ -7,6 +7,8 @@ interface ImportResult {
   created_count: number
   skipped_count: number
   skipped_handles: string[]
+  skipped_category_count: number
+  skipped_category_handles: { handle: string; unmatched_category_path: string }[]
   products: any[]
 }
 
@@ -65,14 +67,15 @@ const BatchImportPage = () => {
       const data: ImportResult = await response.json()
       setResult(data)
 
-      if (data.created_count > 0 && data.skipped_count === 0) {
+      const categorySkipped = data.skipped_category_count || 0
+      if (data.created_count > 0 && data.skipped_count === 0 && categorySkipped === 0) {
         toast.success(`Successfully imported ${data.created_count} product(s)`)
-      } else if (data.created_count > 0 && data.skipped_count > 0) {
+      } else if (data.created_count > 0) {
         toast.success(
-          `Imported ${data.created_count} product(s), skipped ${data.skipped_count} existing handle(s)`
+          `Imported ${data.created_count} product(s), skipped ${data.skipped_count} existing, ${categorySkipped} unmatched category`
         )
-      } else if (data.created_count === 0 && data.skipped_count > 0) {
-        toast.error(`All ${data.skipped_count} product(s) already exist — nothing imported`)
+      } else if (data.created_count === 0 && (data.skipped_count > 0 || categorySkipped > 0)) {
+        toast.error(`No products imported — ${data.skipped_count} existing, ${categorySkipped} unmatched category`)
       } else {
         toast.error("No products were imported")
       }
@@ -196,7 +199,7 @@ const BatchImportPage = () => {
       "180",
       "70",
       "45",
-      "furniture,living-room",
+      "Furniture > Living Room > Sofas",
       "Color",
       "Green",
       "",
@@ -259,8 +262,10 @@ const BatchImportPage = () => {
           Upload a CSV file to batch-create products with variants, options,
           categories, Arabic metadata, custom fields (show price, homepage,
           MOQ), and discount prices. Products with existing handles will be
-          skipped. If a variant has a "price_after" value, it will be added to
-          a sale-type Price List as a discount price.
+          skipped. Categories must be entered as full tree paths using {">"} as
+          the hierarchy separator (e.g. "Electrical Appliances {">"} Refrigerators {">"}
+          Minibar"). Multiple category paths are separated by commas. Products
+          with unmatched category paths will be skipped.
         </Text>
         <Text className="text-ui-fg-subtle text-sm">
           Multi-line descriptions are supported in both
@@ -370,6 +375,25 @@ const BatchImportPage = () => {
                   >
                     {handle}
                   </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {result.skipped_category_handles && result.skipped_category_handles.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <Text className="font-medium">Skipped (Unmatched Categories):</Text>
+              <div className="flex flex-col gap-1">
+                {result.skipped_category_handles.map((item) => (
+                  <div
+                    key={item.handle}
+                    className="flex items-center justify-between p-2 border border-ui-border-base rounded-md"
+                  >
+                    <Text className="text-sm">{item.handle}</Text>
+                    <Text className="text-xs text-ui-fg-subtle">
+                      Unmatched: {item.unmatched_category_path}
+                    </Text>
+                  </div>
                 ))}
               </div>
             </div>

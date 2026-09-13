@@ -97,65 +97,91 @@ export async function POST(
   const existingHandles = new Set(existingProducts.map((p: any) => p.handle))
   const skippedHandles = allHandles.filter((h) => existingHandles.has(h))
 
-  // Resolve categories: fetch all categories once, build handle → id map
-  const allCategoryHandles = new Set<string>()
-  for (const row of rows) {
-    const catHandles = (row.category_handles || "")
-      .split(",")
-      .map((c) => c.trim())
-      .filter(Boolean)
-    catHandles.forEach((h) => allCategoryHandles.add(h))
+  // Fetch ALL categories and build a tree for tree-path resolution
+  const allCategories = await productModule.listProductCategories(
+    {},
+    { select: ["id", "name", "handle", "parent_category_id", "metadata"], take: 100 }
+  )
+
+  // Build children-by-parent map for tree traversal
+  const childrenByParent = new Map<string | null, any[]>()
+  for (const cat of allCategories) {
+    const parentId = cat.parent_category_id || null
+    if (!childrenByParent.has(parentId)) {
+      childrenByParent.set(parentId, [])
+    }
+    childrenByParent.get(parentId)!.push(cat)
   }
 
-  const categoryMap = new Map<string, string>()
-  if (allCategoryHandles.size > 0) {
-    const handleList = Array.from(allCategoryHandles)
-    const categories = await productModule.listProductCategories(
-      { handle: handleList },
-      { select: ["id", "handle", "name"] }
-    )
-    for (const cat of categories) {
-      categoryMap.set(cat.handle, cat.id)
+  // Helper: get normalized name for matching (checks localized name first)
+  const getCategoryName = (cat: any): string => {
+    const enName = cat.metadata?.localizations?.en?.name
+    return (enName || cat.name || "").toLowerCase().trim()
+  }
+
+  // Resolve a tree path (e.g. ["Electrical Appliances", "Refrigerators", "Minibar"]) to ALL category IDs along the path
+  const resolveTreePath = (pathParts: string[]): string[] | null => {
+    let currentLevel = childrenByParent.get(null) || []
+    const matchedIds: string[] = []
+
+    for (const part of pathParts) {
+      const partLower = part.trim().toLowerCase()
+      if (!partLower) return null
+
+      const found = currentLevel.find((cat) => getCategoryName(cat) === partLower)
+      if (!found) return null
+
+      matchedIds.push(found.id)
+      currentLevel = childrenByParent.get(found.id) || []
     }
 
-    // For any handles not found, try matching by name (case-insensitive)
-    const foundHandles = new Set(categories.map((c: any) => c.handle))
-    const unmatched = handleList.filter((h) => !foundHandles.has(h))
-    if (unmatched.length > 0) {
-      const allCategories = await productModule.listProductCategories(
-        {},
-        { select: ["id", "handle", "name"] }
-      )
-      const lowerUnmatched = unmatched.map((h) => h.toLowerCase())
-      for (const cat of allCategories) {
-        if (cat.name && lowerUnmatched.includes((cat.name as string).toLowerCase())) {
-          categoryMap.set(cat.name, cat.id)
-          categoryMap.set((cat.name as string).toLowerCase(), cat.id)
-        }
-      }
-    }
+    return matchedIds.length > 0 ? matchedIds : null
   }
 
   // Build product payloads and custom data map
   const products: any[] = []
   const customDataMap: Record<string, CustomData> = {}
   const discountRows: { sku: string; price_after: number }[] = []
+  const skippedCategoryHandles: { handle: string; unmatched_category_path: string }[] = []
 
   for (const [handle, groupRows] of grouped.entries()) {
     if (existingHandles.has(handle)) continue
 
     const firstRow = groupRows[0]
 
-    // Build categories array
-    const catHandles = (firstRow.category_handles || "")
+    // Parse category tree paths (comma-separated; each path uses > as hierarchy separator)
+    const categoryPathStrings = (firstRow.category_handles || "")
       .split(",")
       .map((c) => c.trim())
       .filter(Boolean)
 
-    const categories = catHandles
-      .map((h) => categoryMap.get(h) || categoryMap.get(h.toLowerCase()))
-      .filter(Boolean)
-      .map((id) => ({ id }))
+    let categories: { id: string }[] = []
+    let hasUnmatchedCategory = false
+    let unmatchedPath = ""
+
+    if (categoryPathStrings.length > 0) {
+      for (const pathStr of categoryPathStrings) {
+        const pathParts = pathStr.split(">").map((p) => p.trim()).filter(Boolean)
+        if (pathParts.length === 0) continue
+
+        const pathIds = resolveTreePath(pathParts)
+        if (!pathIds) {
+          hasUnmatchedCategory = true
+          unmatchedPath = pathStr
+          break
+        }
+        for (const id of [...pathIds].reverse()) {
+          if (!categories.some((c) => c.id === id)) {
+            categories.push({ id })
+          }
+        }
+      }
+    }
+
+    if (hasUnmatchedCategory) {
+      skippedCategoryHandles.push({ handle, unmatched_category_path: unmatchedPath })
+      continue
+    }
 
     // Collect options and their values across all rows
     const optionMap = new Map<string, Set<string>>()
@@ -277,6 +303,8 @@ export async function POST(
       created_count: 0,
       skipped_count: skippedHandles.length,
       skipped_handles: skippedHandles,
+      skipped_category_count: skippedCategoryHandles.length,
+      skipped_category_handles: skippedCategoryHandles,
       products: [],
     })
     return
@@ -428,6 +456,8 @@ export async function POST(
     created_count: createdProducts.length,
     skipped_count: skippedHandles.length,
     skipped_handles: skippedHandles,
+    skipped_category_count: skippedCategoryHandles.length,
+    skipped_category_handles: skippedCategoryHandles,
     products: createdProducts,
     debug_discount: debugInfo,
   })
