@@ -2,64 +2,116 @@ import {
   MedusaRequest,
   MedusaResponse,
 } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 export async function GET(
   req: MedusaRequest,
   res: MedusaResponse
 ) {
+  try {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
-  const productModule = req.scope.resolve(Modules.PRODUCT)
+  const knex = req.scope.resolve("__pg_connection__")
 
   const categoryId = (req as any).query?.category_id as string | undefined
   const regionId = (req as any).query?.region_id as string | undefined
 
-  // Build product filters
-  const productFilters: Record<string, any> = { status: "published" }
-  if (categoryId) {
-    productFilters.categories = { id: { $in: [categoryId] } }
+  console.log("[product-filters] called with categoryId:", categoryId, "regionId:", regionId)
+
+  // Resolve currency_code from region (price table has currency_code, not region_id)
+  let currencyCode: string | undefined
+  if (regionId) {
+    const { data: regions } = await query.graph({
+      entity: "region",
+      fields: ["id", "currency_code"],
+      filters: { id: regionId },
+    })
+    currencyCode = regions[0]?.currency_code
+    console.log("[product-filters] resolved currency_code:", currencyCode)
   }
 
-  // Fetch all products with variants and options for filter extraction
-  const [products, collections] = await Promise.all([
-    productModule.listProducts(productFilters, {
-      relations: [
-        "variants",
-        "variants.options",
-        "variants.options.option",
-        "variants.prices",
-        "categories",
-        "collection",
-        "type",
-      ],
-      take: 1000,
-    }),
-    productModule.listProductCollections(
-      {},
-      {
-        select: ["id", "title", "handle"],
-        take: 100,
-      }
-    ),
-  ])
+  console.time("[product-filters] aggregate query")
 
-  // Extract filter options
+  // Build product filters for query.graph()
+  const productFilters: Record<string, any> = { status: "published" }
+  if (categoryId) {
+    productFilters.categories = { id: [categoryId] }
+  }
+
+  // Lightweight query: only select fields needed for filter extraction
+  // No images, tags, calculated_price, or metadata hydration
+  const { data: products } = await query.graph({
+    entity: "product",
+    fields: [
+      "id",
+      "collection.id",
+      "collection.title",
+      "collection.handle",
+      "type.id",
+      "type.value",
+      "categories.id",
+      "categories.name",
+      "categories.parent_category_id",
+      "variants.id",
+      "variants.options.value",
+      "variants.options.option.title",
+    ],
+    filters: productFilters,
+    pagination: { limit: 1000 },
+  })
+
+  console.log("[product-filters] query.graph returned", products.length, "products")
+  if (products.length > 0) {
+    console.log("[product-filters] sample product:", JSON.stringify(products[0], null, 2).slice(0, 500))
+  }
+
+  const productIds = products.map((p: any) => p.id)
+
+  // Fetch price amounts via knex (raw SQL — no ORM hydration overhead)
+  // We get all amounts and compute min/max via reduce in JS
+  let priceAmounts: number[] = []
+  if (productIds.length > 0) {
+    let priceQuery = knex
+      .select("price.amount")
+      .from("product_variant")
+      .innerJoin(
+        "product_variant_price_set",
+        "product_variant_price_set.variant_id",
+        "product_variant.id"
+      )
+      .innerJoin("price_set", "price_set.id", "product_variant_price_set.price_set_id")
+      .innerJoin("price", "price.price_set_id", "price_set.id")
+      .whereIn("product_variant.product_id", productIds)
+      .whereNull("product_variant.deleted_at")
+      .whereNull("product_variant_price_set.deleted_at")
+      .whereNull("price_set.deleted_at")
+      .whereNull("price.deleted_at")
+
+    if (currencyCode) {
+      priceQuery = priceQuery.where("price.currency_code", currencyCode)
+    }
+
+    const priceRows = await priceQuery
+    priceAmounts = priceRows.map((row: any) => parseFloat(row.amount))
+  }
+
+  console.timeEnd("[product-filters] aggregate query")
+
+  // Dedupe filter values in JS using Sets
+  // query.graph() returns flat arrays with duplicates — no DISTINCT/GROUP BY
   const colors = new Set<string>()
   const materials = new Set<string>()
   const sizes = new Set<string>()
-  const prices: number[] = []
-  const productCategoriesMap = new Map<
-    string,
-    { id: string; name: string; parent_category_id: string | null; count: number }
-  >()
   const collectionsMap = new Map<
     string,
     { id: string; title: string; handle: string }
   >()
   const typesMap = new Map<string, { id: string; value: string }>()
+  const productCategoriesMap = new Map<
+    string,
+    { id: string; name: string; parent_category_id: string | null; count: number }
+  >()
 
   products.forEach((product: any) => {
-    // Collections
     if (product.collection) {
       collectionsMap.set(product.collection.id, {
         id: product.collection.id,
@@ -68,7 +120,6 @@ export async function GET(
       })
     }
 
-    // Product types
     if (product.type) {
       typesMap.set(product.type.id, {
         id: product.type.id,
@@ -76,7 +127,6 @@ export async function GET(
       })
     }
 
-    // Categories
     if (product.categories && Array.isArray(product.categories)) {
       product.categories.forEach((cat: any) => {
         const catId = cat.id
@@ -94,18 +144,7 @@ export async function GET(
       })
     }
 
-    // Variant options
     product.variants?.forEach((variant: any) => {
-      // Price
-      if (variant.prices && variant.prices.length > 0) {
-        const price = variant.prices.find(
-          (p: any) => !regionId || p.region_id === regionId
-        )
-        if (price?.amount) {
-          prices.push(price.amount)
-        }
-      }
-
       variant.options?.forEach((option: any) => {
         const optionTitle = option.option?.title?.toLowerCase()
         const optionValue = option.value
@@ -121,7 +160,19 @@ export async function GET(
     })
   })
 
-  const sortedPrices = prices.sort((a, b) => a - b)
+  // Compute price min/max via reduce (not SQL aggregate)
+  const priceRange = priceAmounts.length > 0
+    ? priceAmounts.reduce(
+        (acc, amount) => ({
+          min: Math.min(acc.min, amount),
+          max: Math.max(acc.max, amount),
+        }),
+        { min: Infinity, max: -Infinity }
+      )
+    : { min: 0, max: 0 }
+
+  if (priceRange.min === Infinity) priceRange.min = 0
+  if (priceRange.max === -Infinity) priceRange.max = 0
 
   res.json({
     collections: Array.from(collectionsMap.values()),
@@ -130,10 +181,25 @@ export async function GET(
     materials: Array.from(materials).sort(),
     sizes: Array.from(sizes).sort(),
     priceRange: {
-      min: sortedPrices[0] || 0,
-      max: sortedPrices[sortedPrices.length - 1] || 0,
+      min: priceRange.min,
+      max: priceRange.max,
     },
     totalProducts: products.length,
     productCategories: Array.from(productCategoriesMap.values()),
   })
+  } catch (error) {
+    console.error("[product-filters] ERROR:", error)
+    res.status(500).json({
+      error: "Failed to fetch filter options",
+      message: error instanceof Error ? error.message : String(error),
+      collections: [],
+      types: [],
+      colors: [],
+      materials: [],
+      sizes: [],
+      priceRange: { min: 0, max: 0 },
+      totalProducts: 0,
+      productCategories: [],
+    })
+  }
 }
