@@ -12,22 +12,31 @@ export async function GET(
   const productModule = req.scope.resolve(Modules.PRODUCT)
 
   // Fetch all layout data in parallel
-  const [
-    productCategories,
-    productCollections,
-    packagesResult,
-    portfolioCategories,
-    socialMedia,
-  ] = await Promise.all([
-    // Product categories (Medusa core)
-    productModule.listProductCategories(
+  // Fetch ALL product categories with pagination (take: 100 was cutting off newer categories)
+  const allProductCategories: any[] = []
+  let catOffset = 0
+  let hasMoreCats = true
+  while (hasMoreCats) {
+    const batch = await productModule.listProductCategories(
       {},
       {
         relations: [],
         select: ["id", "name", "handle", "parent_category_id", "metadata"],
         take: 100,
+        skip: catOffset,
       }
-    ),
+    )
+    allProductCategories.push(...batch)
+    catOffset += batch.length
+    hasMoreCats = batch.length === 100
+  }
+
+  const [
+    productCollections,
+    packagesResult,
+    portfolioCategories,
+    socialMedia,
+  ] = await Promise.all([
     // Product collections (Medusa core)
     productModule.listProductCollections(
       {},
@@ -155,7 +164,7 @@ export async function GET(
   })
 
   // Normalize product categories with localizations
-  const categories = productCategories.map((cat: any) => {
+  const categories = allProductCategories.map((cat: any) => {
     const ar = cat.metadata?.localizations?.ar ?? {}
     const en = cat.metadata?.localizations?.en ?? {}
 

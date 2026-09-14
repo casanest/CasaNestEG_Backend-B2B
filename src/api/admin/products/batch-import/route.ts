@@ -97,11 +97,12 @@ export async function POST(
   const existingHandles = new Set(existingProducts.map((p: any) => p.handle))
   const skippedHandles = allHandles.filter((h) => existingHandles.has(h))
 
-  // Fetch ALL categories and build a tree for tree-path resolution
-  const allCategories = await productModule.listProductCategories(
-    {},
-    { select: ["id", "name", "handle", "parent_category_id", "metadata"], take: 100 }
-  )
+  // Fetch ALL categories via lightweight tree endpoint (returns only id, name, parent_category_id, en_name)
+  const treeRes = await fetch(`${req.protocol}://${req.get("host")}/admin/categories/tree`, {
+    headers: { cookie: req.headers.cookie || "" },
+  })
+  const treeData = await treeRes.json()
+  const allCategories: any[] = treeData.categories || []
 
   // Build children-by-parent map for tree traversal
   const childrenByParent = new Map<string | null, any[]>()
@@ -115,8 +116,7 @@ export async function POST(
 
   // Helper: get normalized name for matching (checks localized name first)
   const getCategoryName = (cat: any): string => {
-    const enName = cat.metadata?.localizations?.en?.name
-    return (enName || cat.name || "").toLowerCase().trim()
+    return (cat.en_name || cat.name || "").toLowerCase().trim()
   }
 
   // Resolve a tree path (e.g. ["Electrical Appliances", "Refrigerators", "Minibar"]) to ALL category IDs along the path

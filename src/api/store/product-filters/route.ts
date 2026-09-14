@@ -14,8 +14,9 @@ export async function GET(
 
   const categoryId = (req as any).query?.category_id as string | undefined
   const regionId = (req as any).query?.region_id as string | undefined
+  const productIdsParam = (req as any).query?.product_ids as string | undefined
 
-  console.log("[product-filters] called with categoryId:", categoryId, "regionId:", regionId)
+  console.log("[product-filters] called with categoryId:", categoryId, "regionId:", regionId, "productIds:", productIdsParam ? `${productIdsParam.split(",").length} ids` : "none")
 
   // Resolve currency_code from region (price table has currency_code, not region_id)
   let currencyCode: string | undefined
@@ -35,6 +36,23 @@ export async function GET(
   const productFilters: Record<string, any> = { status: "published" }
   if (categoryId) {
     productFilters.categories = { id: [categoryId] }
+  }
+  if (productIdsParam) {
+    const productIds = productIdsParam.split(",").filter(Boolean)
+    if (productIds.length === 0) {
+      res.json({
+        collections: [],
+        types: [],
+        colors: [],
+        materials: [],
+        sizes: [],
+        priceRange: { min: 0, max: 0 },
+        totalProducts: 0,
+        productCategories: [],
+      })
+      return
+    }
+    productFilters.id = productIds
   }
 
   // Lightweight query: only select fields needed for filter extraction
