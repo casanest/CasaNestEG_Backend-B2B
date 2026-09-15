@@ -10,6 +10,8 @@ export const PostStoreRfq = z.object({
   message: z.string().optional(),
   items: z.array(z.object({
     product_id: z.string(),
+    variant_id: z.string().optional(),
+    variant_title: z.string().optional(),
     quantity: z.number().int().min(1),
   })).optional(),
 })

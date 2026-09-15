@@ -3,7 +3,7 @@ import { RFQ_MODULE } from "../../../modules/rfq"
 import RfqModuleService from "../../../modules/rfq/service"
 
 type Input = {
-  items: { product_id: string; product_title: string; quantity: number }[]
+  items: { product_id: string; product_title: string; variant_id?: string; variant_title?: string; quantity: number }[]
   rfq_id: string
 }
 

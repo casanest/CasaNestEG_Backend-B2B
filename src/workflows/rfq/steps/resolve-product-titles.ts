@@ -2,7 +2,7 @@ import { createStep, StepResponse } from "@medusajs/framework/workflows-sdk"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 type Input = {
-  items: { product_id: string; quantity: number }[]
+  items: { product_id: string; variant_id?: string; variant_title?: string; quantity: number }[]
 }
 
 export const resolveProductTitlesStep = createStep(
@@ -32,6 +32,8 @@ export const resolveProductTitlesStep = createStep(
       return {
         ...item,
         product_title: title,
+        variant_id: item.variant_id || undefined,
+        variant_title: item.variant_title || undefined,
       }
     })
     

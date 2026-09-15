@@ -39,6 +39,7 @@ export async function GET(
 
   const productIds = items.map((item: any) => item.product_id).filter(Boolean);
 
+  // Key: variant_id when available, otherwise product_id
   let productVariantMap = new Map<string, { variant_info: string | null; variant_title: string | null; variant_sku: string | null; product_handle: string | null; thumbnail: string | null; variant_price: number | null; variant_currency: string | null; variant_original_price: number | null; variant_original_currency: string | null }>();
 
   if (productIds.length > 0) {
@@ -59,12 +60,11 @@ export async function GET(
       filters: { id: productIds },
     });
 
-    // Get prices via raw SQL — same approach as store/search route.
-    // This reliably handles sale price lists (price_list.type = 'sale')
-    // and gets the correct price across all variants instead of variants[0].
+    // Get prices via raw SQL — per variant_id so each variant gets its own price.
+    // This reliably handles sale price lists (price_list.type = 'sale').
     const priceRows = await knex
       .select(
-        'product_variant.product_id',
+        'product_variant.id as variant_id',
         knex.raw("MIN(CASE WHEN price_list.type = 'sale' THEN price.amount END) AS sale_price"),
         knex.raw('MIN(CASE WHEN price.price_list_id IS NULL THEN price.amount END) AS regular_price'),
         knex.raw("MIN(CASE WHEN price_list.type = 'sale' THEN price.currency_code END) AS sale_currency"),
@@ -80,11 +80,12 @@ export async function GET(
       .whereNull('product_variant_price_set.deleted_at')
       .whereNull('price_set.deleted_at')
       .whereNull('price.deleted_at')
-      .groupBy('product_variant.product_id');
+      .groupBy('product_variant.id');
 
+    // Key price map by variant_id
     const priceMap = new Map<string, { sale_price: number | null; regular_price: number | null; sale_currency: string | null; regular_currency: string | null }>();
     for (const row of priceRows) {
-      priceMap.set(row.product_id, {
+      priceMap.set(row.variant_id, {
         sale_price: row.sale_price,
         regular_price: row.regular_price,
         sale_currency: row.sale_currency,
@@ -94,55 +95,90 @@ export async function GET(
 
     for (const product of products as any[]) {
       const variants = product.variants || [];
-      let variantInfo: string | null = null;
-      let variantTitle: string | null = null;
-      let variantSku: string | null = null;
-      let variantPrice: number | null = null;
-      let variantCurrency: string | null = null;
 
-      if (variants.length > 0) {
-        const variant = variants[0];
-        variantTitle = variant.title || null;
-        variantSku = variant.sku || null;
+      const productHandle = product.handle || null;
+      const thumbnail = product.thumbnail || product.images?.[0]?.url || null;
+
+      // Store an entry for each variant keyed by variant_id, with per-variant pricing
+      for (const variant of variants) {
         const optionValues = (variant.options || [])
           .map((opt: any) => opt?.value)
           .filter(Boolean);
-        variantInfo = optionValues.length > 0 ? optionValues.join(' / ') : null;
-      }
+        const variantInfo = optionValues.length > 0 ? optionValues.join(' / ') : null;
 
-      // Use SQL-computed price: sale price takes priority over regular price
-      const priceInfo = priceMap.get(product.id);
-      let variantOriginalPrice: number | null = null;
-      let variantOriginalCurrency: string | null = null;
-      if (priceInfo) {
-        if (priceInfo.sale_price != null) {
-          variantPrice = priceInfo.sale_price;
-          variantCurrency = priceInfo.sale_currency;
-          // Keep regular price as the original (crossed-out) price
-          variantOriginalPrice = priceInfo.regular_price;
-          variantOriginalCurrency = priceInfo.regular_currency;
-        } else if (priceInfo.regular_price != null) {
-          variantPrice = priceInfo.regular_price;
-          variantCurrency = priceInfo.regular_currency;
+        // Use SQL-computed price for this specific variant
+        const priceInfo = priceMap.get(variant.id);
+        let variantPrice: number | null = null;
+        let variantCurrency: string | null = null;
+        let variantOriginalPrice: number | null = null;
+        let variantOriginalCurrency: string | null = null;
+        if (priceInfo) {
+          if (priceInfo.sale_price != null) {
+            variantPrice = priceInfo.sale_price;
+            variantCurrency = priceInfo.sale_currency;
+            variantOriginalPrice = priceInfo.regular_price;
+            variantOriginalCurrency = priceInfo.regular_currency;
+          } else if (priceInfo.regular_price != null) {
+            variantPrice = priceInfo.regular_price;
+            variantCurrency = priceInfo.regular_currency;
+          }
         }
+
+        productVariantMap.set(variant.id, {
+          variant_info: variantInfo,
+          variant_title: variant.title || null,
+          variant_sku: variant.sku || null,
+          product_handle: productHandle,
+          thumbnail,
+          variant_price: variantPrice,
+          variant_currency: variantCurrency,
+          variant_original_price: variantOriginalPrice,
+          variant_original_currency: variantOriginalCurrency,
+        });
       }
 
-      productVariantMap.set(product.id, {
-        variant_info: variantInfo,
-        variant_title: variantTitle,
-        variant_sku: variantSku,
-        product_handle: product.handle || null,
-        thumbnail: product.thumbnail || product.images?.[0]?.url || null,
-        variant_price: variantPrice,
-        variant_currency: variantCurrency,
-        variant_original_price: variantOriginalPrice,
-        variant_original_currency: variantOriginalCurrency,
-      });
+      // Also store a fallback entry keyed by product_id (for items without variant_id)
+      if (variants.length > 0) {
+        const fallbackVariant = variants[0];
+        const fallbackPriceInfo = priceMap.get(fallbackVariant.id);
+        let fallbackPrice: number | null = null;
+        let fallbackCurrency: string | null = null;
+        let fallbackOriginalPrice: number | null = null;
+        let fallbackOriginalCurrency: string | null = null;
+        if (fallbackPriceInfo) {
+          if (fallbackPriceInfo.sale_price != null) {
+            fallbackPrice = fallbackPriceInfo.sale_price;
+            fallbackCurrency = fallbackPriceInfo.sale_currency;
+            fallbackOriginalPrice = fallbackPriceInfo.regular_price;
+            fallbackOriginalCurrency = fallbackPriceInfo.regular_currency;
+          } else if (fallbackPriceInfo.regular_price != null) {
+            fallbackPrice = fallbackPriceInfo.regular_price;
+            fallbackCurrency = fallbackPriceInfo.regular_currency;
+          }
+        }
+        const optionValues = (fallbackVariant.options || [])
+          .map((opt: any) => opt?.value)
+          .filter(Boolean);
+        const fallbackVariantInfo = optionValues.length > 0 ? optionValues.join(' / ') : null;
+        productVariantMap.set(product.id, {
+          variant_info: fallbackVariantInfo,
+          variant_title: fallbackVariant.title || null,
+          variant_sku: fallbackVariant.sku || null,
+          product_handle: productHandle,
+          thumbnail,
+          variant_price: fallbackPrice,
+          variant_currency: fallbackCurrency,
+          variant_original_price: fallbackOriginalPrice,
+          variant_original_currency: fallbackOriginalCurrency,
+        });
+      }
     }
   }
 
   const itemsWithVariants = items.map((item: any) => {
-    const pv = productVariantMap.get(item.product_id);
+    // Look up by variant_id first, fall back to product_id
+    const lookupKey = item.variant_id || item.product_id;
+    const pv = productVariantMap.get(lookupKey);
     return {
       ...item,
       variant_info: pv?.variant_info ?? null,

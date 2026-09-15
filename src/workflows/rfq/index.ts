@@ -12,7 +12,7 @@ export type CreateRfqWorkflowInput = {
   city?: string
   address?: string
   message?: string
-  items?: { product_id: string; quantity: number }[]
+  items?: { product_id: string; variant_id?: string; variant_title?: string; quantity: number }[]
   files?: { originalname: string; buffer: string; mimetype: string; size: number }[]
 }
 
