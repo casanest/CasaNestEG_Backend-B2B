@@ -206,6 +206,12 @@ export async function POST(
       values: Array.from(values),
     }))
 
+    // If no options were provided, add a default option so Medusa doesn't reject the product
+    const hasNoOptions = options.length === 0
+    if (hasNoOptions) {
+      options.push({ title: "default", values: ["Default"] })
+    }
+
     // Build variants
     const variants = groupRows.map((row) => {
       const variantOptions: Record<string, string> = {}
@@ -229,9 +235,14 @@ export async function POST(
         title: row.variant_title || row.product_title,
         sku: row.variant_sku,
         prices,
-        options: variantOptions,
         manage_inventory: false,
         allow_backorder: true,
+      }
+
+      if (Object.keys(variantOptions).length > 0) {
+        variant.options = variantOptions
+      } else if (hasNoOptions) {
+        variant.options = { default: "Default" }
       }
 
       const priceAfter = parseNumber(row.price_after)
