@@ -22,6 +22,235 @@ function parseNumber(value: string): number | undefined {
   return isNaN(n) ? undefined : n
 }
 
+function decodeCsvBuffer(buffer: Buffer): string {
+  // UTF-8 BOM
+  if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+    return buffer.subarray(3).toString("utf-8")
+  }
+
+  // UTF-16 LE BOM
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+    return new TextDecoder("utf-16le").decode(buffer.subarray(2))
+  }
+
+  // UTF-16 BE BOM
+  if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+    return new TextDecoder("utf-16be").decode(buffer.subarray(2))
+  }
+
+  // Try strict UTF-8; if invalid bytes found, fall back to Windows-1256 (Arabic)
+  try {
+    const decoder = new TextDecoder("utf-8", { fatal: true })
+    return decoder.decode(buffer)
+  } catch {
+    return new TextDecoder("windows-1256").decode(buffer)
+  }
+}
+
+type ImageJob = {
+  handle: string
+  kind: "thumbnail" | "media"
+  index: number
+  url: string
+}
+
+type ImageJobResult = {
+  job: ImageJob
+  success: boolean
+  cdnUrl?: string
+  error?: string
+}
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024
+const FETCH_TIMEOUT_MS = 15000
+
+const PRIVATE_IP_PATTERNS = [
+  /^10\./,
+  /^172\.(1[6-9]|2[0-9]|3[01])\./,
+  /^192\.168\./,
+  /^169\.254\./,
+]
+
+function isUrlSafe(url: string): boolean {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return false
+  }
+
+  const hostname = parsed.hostname.toLowerCase()
+
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "0.0.0.0" ||
+    hostname === "::1"
+  ) {
+    return false
+  }
+
+  for (const pattern of PRIVATE_IP_PATTERNS) {
+    if (pattern.test(hostname)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+const EXT_BY_MIME: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/gif": ".gif",
+  "image/webp": ".webp",
+  "image/svg+xml": ".svg",
+  "image/bmp": ".bmp",
+}
+
+const MIME_BY_EXT: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".bmp": "image/bmp",
+}
+
+function inferMimeType(url: string): string | null {
+  try {
+    const pathname = new URL(url).pathname
+    const ext = pathname.slice(pathname.lastIndexOf(".")).toLowerCase()
+    return MIME_BY_EXT[ext] ?? null
+  } catch {
+    return null
+  }
+}
+
+async function downloadAndUploadImage(
+  job: ImageJob,
+  fileModule: any
+): Promise<ImageJobResult> {
+  const { handle, kind, index, url } = job
+
+  if (!isUrlSafe(url)) {
+    return { job, success: false, error: "URL rejected by SSRF guard" }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+    })
+
+    if (!response.ok) {
+      return { job, success: false, error: `HTTP ${response.status}` }
+    }
+
+    const contentLength = parseInt(response.headers.get("content-length") || "", 10)
+    if (!isNaN(contentLength) && contentLength > MAX_IMAGE_SIZE) {
+      return { job, success: false, error: "File too large (>10MB)" }
+    }
+
+    let mimeType = (response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase()
+    if (!mimeType.startsWith("image/")) {
+      mimeType = inferMimeType(url) || ""
+    }
+    if (!mimeType.startsWith("image/")) {
+      return { job, success: false, error: "Could not determine image MIME type" }
+    }
+
+    const chunks: Buffer[] = []
+    let totalSize = 0
+    const reader = response.body?.getReader()
+    if (!reader) {
+      const buf = Buffer.from(await response.arrayBuffer())
+      if (buf.length > MAX_IMAGE_SIZE) {
+        return { job, success: false, error: "File too large (>10MB)" }
+      }
+      chunks.push(buf)
+      totalSize = buf.length
+    } else {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        totalSize += value.length
+        if (totalSize > MAX_IMAGE_SIZE) {
+          await reader.cancel()
+          return { job, success: false, error: "File too large (>10MB)" }
+        }
+        chunks.push(Buffer.from(value))
+      }
+    }
+
+    const buffer = Buffer.concat(chunks)
+    if (buffer.length === 0) {
+      return { job, success: false, error: "Empty response body" }
+    }
+
+    const ext = EXT_BY_MIME[mimeType] || ".img"
+    const filename =
+      kind === "thumbnail"
+        ? `${handle}-thumbnail${ext}`
+        : `${handle}-media-${index}${ext}`
+
+    const content = buffer.toString("binary")
+    const created = await fileModule.createFiles([
+      {
+        filename,
+        mimeType,
+        content,
+        access: "public",
+      },
+    ])
+
+    const cdnUrl = created[0]?.url
+    if (!cdnUrl) {
+      return { job, success: false, error: "File module returned no URL" }
+    }
+
+    return { job, success: true, cdnUrl }
+  } catch (err: any) {
+    if (err?.name === "AbortError") {
+      return { job, success: false, error: "Fetch timed out (15s)" }
+    }
+    return { job, success: false, error: err?.message || String(err) }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  worker: (item: T) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let nextIndex = 0
+
+  const runWorker = async () => {
+    while (true) {
+      const i = nextIndex++
+      if (i >= items.length) break
+      results[i] = await worker(items[i])
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () =>
+    runWorker()
+  )
+  await Promise.all(workers)
+  return results
+}
+
 export async function POST(
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
@@ -35,7 +264,7 @@ export async function POST(
     )
   }
 
-  const csvText = file.buffer.toString("utf-8")
+  const csvText = decodeCsvBuffer(file.buffer)
   const rows = parseCsv(csvText)
 
   if (rows.length === 0) {
@@ -140,9 +369,12 @@ export async function POST(
 
   // Build product payloads and custom data map
   const products: any[] = []
+  const handleToPayload = new Map<string, any>()
+  const imageJobs: ImageJob[] = []
   const customDataMap: Record<string, CustomData> = {}
   const discountRows: { sku: string; price_after: number }[] = []
   const skippedCategoryHandles: { handle: string; unmatched_category_path: string }[] = []
+  const imageUploadErrors: { handle: string; field: string; url: string; reason: string }[] = []
 
   for (const [handle, groupRows] of grouped.entries()) {
     if (existingHandles.has(handle)) continue
@@ -299,13 +531,64 @@ export async function POST(
       productPayload.metadata = metadata
     }
 
+    handleToPayload.set(handle, productPayload)
     products.push(productPayload)
+
+    // Collect image jobs (only if CSV has thumbnail/media columns)
+    if (headers.includes("thumbnail")) {
+      const thumbnailUrl = (firstRow.thumbnail || "").trim()
+      if (thumbnailUrl) {
+        imageJobs.push({ handle, kind: "thumbnail", index: 0, url: thumbnailUrl })
+      }
+    }
+
+    if (headers.includes("media")) {
+      const mediaUrls = (firstRow.media || "")
+        .split(",")
+        .map((m) => m.trim())
+        .filter(Boolean)
+      mediaUrls.forEach((url, i) => {
+        imageJobs.push({ handle, kind: "media", index: i, url })
+      })
+    }
 
     // Build custom data map entry
     customDataMap[handle] = {
       show_price: parseBoolean(firstRow.product_show_price),
       is_in_homepage: parseBoolean(firstRow.product_show_on_homepage),
       moq: parseNumber(firstRow.product_moq) ?? 1,
+    }
+  }
+
+  // Process image jobs: download → re-upload via File Module → attach CDN URLs to payloads
+  if (imageJobs.length > 0) {
+    const fileModule = req.scope.resolve(Modules.FILE)
+    const results = await runWithConcurrency(
+      imageJobs,
+      (job) => downloadAndUploadImage(job, fileModule),
+      5
+    )
+
+    for (const result of results) {
+      const { job, success, cdnUrl, error } = result
+      const payload = handleToPayload.get(job.handle)
+      if (!payload) continue
+
+      if (success && cdnUrl) {
+        if (job.kind === "thumbnail") {
+          payload.thumbnail = cdnUrl
+        } else {
+          if (!payload.images) payload.images = []
+          payload.images.push({ url: cdnUrl })
+        }
+      } else {
+        imageUploadErrors.push({
+          handle: job.handle,
+          field: job.kind,
+          url: job.url,
+          reason: error || "Unknown error",
+        })
+      }
     }
   }
 
@@ -316,6 +599,7 @@ export async function POST(
       skipped_handles: skippedHandles,
       skipped_category_count: skippedCategoryHandles.length,
       skipped_category_handles: skippedCategoryHandles,
+      image_upload_errors: imageUploadErrors,
       products: [],
     })
     return
@@ -469,6 +753,7 @@ export async function POST(
     skipped_handles: skippedHandles,
     skipped_category_count: skippedCategoryHandles.length,
     skipped_category_handles: skippedCategoryHandles,
+    image_upload_errors: imageUploadErrors,
     products: createdProducts,
     debug_discount: debugInfo,
   })
