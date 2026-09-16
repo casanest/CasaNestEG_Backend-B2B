@@ -32,10 +32,48 @@ export async function GET(
 
   console.time("[product-filters] aggregate query")
 
+  // When a categoryId is provided, fetch ALL descendant category IDs
+  // so products in child categories are included in the filter results
+  let allCategoryIds: string[] = []
+  if (categoryId) {
+    // Fetch all categories flat to build the tree
+    const { data: allCats } = await query.graph({
+      entity: "product_category",
+      fields: ["id", "parent_category_id"],
+      pagination: { take: 1000 },
+    })
+
+    // Build parent→children map
+    const childrenMap = new Map<string, string[]>()
+    allCats.forEach((cat: any) => {
+      const parentId = cat.parent_category_id
+      if (parentId) {
+        if (!childrenMap.has(parentId)) {
+          childrenMap.set(parentId, [])
+        }
+        childrenMap.get(parentId)!.push(cat.id)
+      }
+    })
+
+    // Collect all descendant IDs (BFS)
+    allCategoryIds = [categoryId]
+    const queue = [categoryId]
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      const children = childrenMap.get(current) || []
+      children.forEach((childId: string) => {
+        allCategoryIds.push(childId)
+        queue.push(childId)
+      })
+    }
+
+    console.log("[product-filters] categoryId:", categoryId, "with descendants:", allCategoryIds.length, "categories")
+  }
+
   // Build product filters for query.graph()
   const productFilters: Record<string, any> = { status: "published" }
   if (categoryId) {
-    productFilters.categories = { id: [categoryId] }
+    productFilters.categories = { id: allCategoryIds }
   }
   if (productIdsParam) {
     const productIds = productIdsParam.split(",").filter(Boolean)
@@ -177,6 +215,66 @@ export async function GET(
       })
     })
   })
+
+  // Add ancestor categories to productCategoriesMap so parent categories
+  // (e.g. "chair") appear even when products are only tagged to children (e.g. "Office chair")
+  {
+    // Fetch all categories flat if not already fetched
+    let flatCats = allCategoryIds.length > 0 ? null : await query.graph({
+      entity: "product_category",
+      fields: ["id", "parent_category_id", "name"],
+      pagination: { take: 1000 },
+    })
+
+    // Build id → { parent_category_id, name } lookup
+    const catLookup = new Map<string, { parent_category_id: string | null; name: string }>()
+    if (flatCats) {
+      flatCats.data.forEach((cat: any) => {
+        catLookup.set(cat.id, {
+          parent_category_id: cat.parent_category_id || null,
+          name: cat.name || cat.id,
+        })
+      })
+    } else {
+      // Re-fetch since allCats only had id and parent_category_id
+      const { data: reFetched } = await query.graph({
+        entity: "product_category",
+        fields: ["id", "parent_category_id", "name"],
+        pagination: { take: 1000 },
+      })
+      reFetched.forEach((cat: any) => {
+        catLookup.set(cat.id, {
+          parent_category_id: cat.parent_category_id || null,
+          name: cat.name || cat.id,
+        })
+      })
+    }
+
+    // For each category with products, walk up the parent chain and add ancestors
+    const categoriesToAdd = new Map<string, number>()
+    productCategoriesMap.forEach((cat, catId) => {
+      let parentId = catLookup.get(catId)?.parent_category_id || null
+      while (parentId) {
+        const parentInfo = catLookup.get(parentId)
+        if (!parentInfo) break
+        categoriesToAdd.set(parentId, (categoriesToAdd.get(parentId) || 0) + cat.count)
+        parentId = parentInfo.parent_category_id || null
+      }
+    })
+
+    // Add ancestor categories to the map
+    categoriesToAdd.forEach((count, catId) => {
+      const parentInfo = catLookup.get(catId)
+      if (!productCategoriesMap.has(catId)) {
+        productCategoriesMap.set(catId, {
+          id: catId,
+          name: parentInfo?.name || catId,
+          parent_category_id: parentInfo?.parent_category_id || null,
+          count,
+        })
+      }
+    })
+  }
 
   // Compute price min/max via reduce (not SQL aggregate)
   const priceRange = priceAmounts.length > 0
