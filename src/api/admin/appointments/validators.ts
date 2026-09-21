@@ -64,3 +64,9 @@ export const GetAdminAppointmentsParams = createFindParams({
   });
 
 export type GetAdminAppointmentsParamsType = z.infer<typeof GetAdminAppointmentsParams>;
+
+export const DeleteAdminAppointmentsBody = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+});
+
+export type DeleteAdminAppointmentsBodyType = z.infer<typeof DeleteAdminAppointmentsBody>;

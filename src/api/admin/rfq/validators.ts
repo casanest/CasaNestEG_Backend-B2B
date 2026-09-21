@@ -41,3 +41,9 @@ export const GetAdminRfqsParams = createFindParams({
 );
 
 export type GetAdminRfqsParamsType = z.infer<typeof GetAdminRfqsParams>;
+
+export const DeleteAdminRfqsBody = z.object({
+  ids: z.array(z.string().min(1)).min(1),
+});
+
+export type DeleteAdminRfqsBodyType = z.infer<typeof DeleteAdminRfqsBody>;

@@ -3,7 +3,12 @@ import {
   MedusaResponse,
 } from '@medusajs/framework';
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
-import type { GetAdminAppointmentsParamsType } from './validators';
+import { APPOINTMENTS_MODULE } from '../../../modules/appointments';
+import type AppointmentsModuleService from '../../../modules/appointments/service';
+import type {
+  DeleteAdminAppointmentsBodyType,
+  GetAdminAppointmentsParamsType,
+} from './validators';
 
 export async function GET(
   req: AuthenticatedMedusaRequest,
@@ -56,4 +61,28 @@ export async function GET(
     limit,
     offset,
   });
+}
+
+export async function DELETE(
+  req: AuthenticatedMedusaRequest<DeleteAdminAppointmentsBodyType>,
+  res: MedusaResponse,
+): Promise<void> {
+  const { ids } = req.validatedBody;
+
+  const service: AppointmentsModuleService = req.scope.resolve(APPOINTMENTS_MODULE);
+
+  // Soft-delete attachment records too. The R2 objects are kept so a restore
+  // stays complete.
+  const attachments = await service.listAppointmentAttachments({
+    appointment_id: ids,
+  });
+  if (attachments.length) {
+    await service.softDeleteAppointmentAttachments(
+      attachments.map((att) => att.id),
+    );
+  }
+
+  await service.softDeleteAppointments(ids);
+
+  res.json({ ids });
 }

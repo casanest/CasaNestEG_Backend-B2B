@@ -100,3 +100,27 @@ export const useUpdateAppointment = (id: string) => {
     },
   });
 };
+
+export const useDeleteAppointments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const response = await fetch(`/admin/appointments`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete appointments");
+      }
+      return response.json();
+    },
+    onSuccess: (_data, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      ids.forEach((id) => {
+        queryClient.removeQueries({ queryKey: ["appointment", id] });
+      });
+    },
+  });
+};

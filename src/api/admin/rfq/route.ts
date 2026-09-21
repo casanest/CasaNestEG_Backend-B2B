@@ -3,7 +3,12 @@ import {
   MedusaResponse,
 } from '@medusajs/framework';
 import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
-import type { GetAdminRfqsParamsType } from './validators';
+import { RFQ_MODULE } from '../../../modules/rfq';
+import type RfqModuleService from '../../../modules/rfq/service';
+import type {
+  DeleteAdminRfqsBodyType,
+  GetAdminRfqsParamsType,
+} from './validators';
 
 export async function GET(
   req: AuthenticatedMedusaRequest,
@@ -74,4 +79,40 @@ export async function GET(
     limit,
     offset,
   });
+}
+
+export async function DELETE(
+  req: AuthenticatedMedusaRequest<DeleteAdminRfqsBodyType>,
+  res: MedusaResponse,
+): Promise<void> {
+  const { ids } = req.validatedBody;
+
+  const service: RfqModuleService = req.scope.resolve(RFQ_MODULE);
+
+  // Soft-delete child records too. The R2 objects are kept so a restore
+  // stays complete.
+  const attachments = await service.listRfqAttachments({ rfq_id: ids });
+  if (attachments.length) {
+    await service.softDeleteRfqAttachments(
+      attachments.map((att) => att.id),
+    );
+  }
+
+  const items = await service.listRfqItems({ rfq_id: ids });
+  if (items.length) {
+    await service.softDeleteRfqItems(
+      items.map((item) => item.id),
+    );
+  }
+
+  const comments = await service.listRfqComments({ rfq_id: ids });
+  if (comments.length) {
+    await service.softDeleteRfqComments(
+      comments.map((comment) => comment.id),
+    );
+  }
+
+  await service.softDeleteRfqs(ids);
+
+  res.json({ ids });
 }

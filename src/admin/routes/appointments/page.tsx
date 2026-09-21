@@ -1,8 +1,9 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { Button, Container, Heading, Input, Select, Table, Text } from "@medusajs/ui"
-import { useAppointments, type AppointmentDateField, type AppointmentStatus, type AppointmentSortBy, type AppointmentSortOrder } from "../../hooks/api/appointments"
+import { Button, Checkbox, Container, Heading, Input, Select, Table, Text, toast } from "@medusajs/ui"
+import { useAppointments, useDeleteAppointments, type AppointmentDateField, type AppointmentStatus, type AppointmentSortBy, type AppointmentSortOrder } from "../../hooks/api/appointments"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Trash } from "@medusajs/icons"
 
 interface Appointment {
   id: string
@@ -79,6 +80,54 @@ const AppointmentsPage = () => {
     sort_by: sortBy,
     sort_order: sortOrder,
   })
+  const { mutateAsync: deleteAppointments, isPending: isDeleting } = useDeleteAppointments()
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  const pageAppointments: Appointment[] = data?.appointments ?? []
+  const pageIds = pageAppointments.map((a) => a.id)
+  const selectedOnPage = pageIds.filter((id) => selected.has(id))
+  const allPageSelected = pageIds.length > 0 && selectedOnPage.length === pageIds.length
+  const somePageSelected = selectedOnPage.length > 0 && !allPageSelected
+
+  const toggleAllOnPage = () => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allPageSelected) {
+        pageIds.forEach((id) => next.delete(id))
+      } else {
+        pageIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const handleDeleteSelected = async () => {
+    const ids = Array.from(selected)
+    if (ids.length === 0) return
+    if (!confirm(`Delete ${ids.length} appointment${ids.length === 1 ? "" : "s"}?`)) return
+    try {
+      await deleteAppointments(ids)
+      setSelected(new Set())
+      toast.success(`${ids.length} appointment${ids.length === 1 ? "" : "s"} deleted`)
+      if (selectedOnPage.length === pageIds.length && offset > 0) {
+        setOffset(Math.max(0, offset - limit))
+      }
+    } catch {
+      toast.error("Failed to delete appointments")
+    }
+  }
 
   const count: number = data?.count ?? 0
   const pageCount = Math.max(1, Math.ceil(count / limit))
@@ -236,6 +285,15 @@ const AppointmentsPage = () => {
       <Button variant="secondary" onClick={handleClear}>
         Clear
       </Button>
+
+      <Button
+        variant="danger"
+        onClick={handleDeleteSelected}
+        disabled={selected.size === 0}
+        isLoading={isDeleting}
+      >
+        <Trash /> Delete selected{selected.size > 0 ? ` (${selected.size})` : ""}
+      </Button>
     </div>
   )
 
@@ -275,6 +333,13 @@ const AppointmentsPage = () => {
         <Table>
           <Table.Header>
             <Table.Row>
+              <Table.HeaderCell className="w-[40px]">
+                <Checkbox
+                  checked={allPageSelected ? true : somePageSelected ? "indeterminate" : false}
+                  onCheckedChange={toggleAllOnPage}
+                  aria-label="Select all appointments on this page"
+                />
+              </Table.HeaderCell>
               <Table.HeaderCell>Customer</Table.HeaderCell>
               <Table.HeaderCell>Company</Table.HeaderCell>
               <Table.HeaderCell>Subject</Table.HeaderCell>
@@ -292,6 +357,13 @@ const AppointmentsPage = () => {
                 className="cursor-pointer"
                 onClick={() => navigate(`/appointments/${appointment.id}`)}
               >
+                <Table.Cell onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selected.has(appointment.id)}
+                    onCheckedChange={() => toggleOne(appointment.id)}
+                    aria-label={`Select appointment ${appointment.customer_name}`}
+                  />
+                </Table.Cell>
                 <Table.Cell>{appointment.customer_name}</Table.Cell>
                 <Table.Cell>{appointment.company_name || '-'}</Table.Cell>
                 <Table.Cell>{appointment.subject || '-'}</Table.Cell>

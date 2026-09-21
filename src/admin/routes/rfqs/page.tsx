@@ -1,8 +1,9 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { Button, Container, Heading, Input, Select, Table, Text } from "@medusajs/ui"
-import { useRfqs, type RfqStatus, type RfqSortBy, type RfqSortOrder } from "../../hooks/api/rfq"
+import { Button, Checkbox, Container, Heading, Input, Select, Table, Text, toast } from "@medusajs/ui"
+import { useRfqs, useDeleteRfqs, type RfqStatus, type RfqSortBy, type RfqSortOrder } from "../../hooks/api/rfq"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Trash } from "@medusajs/icons"
 
 interface Rfq {
   id: string
@@ -67,6 +68,54 @@ const RfqsPage = () => {
     sort_by: sortBy,
     sort_order: sortOrder,
   })
+  const { mutateAsync: deleteRfqs, isPending: isDeleting } = useDeleteRfqs()
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  const pageRfqs: Rfq[] = data?.rfqs ?? []
+  const pageIds = pageRfqs.map((r) => r.id)
+  const selectedOnPage = pageIds.filter((id) => selected.has(id))
+  const allPageSelected = pageIds.length > 0 && selectedOnPage.length === pageIds.length
+  const somePageSelected = selectedOnPage.length > 0 && !allPageSelected
+
+  const toggleAllOnPage = () => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allPageSelected) {
+        pageIds.forEach((id) => next.delete(id))
+      } else {
+        pageIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const handleDeleteSelected = async () => {
+    const ids = Array.from(selected)
+    if (ids.length === 0) return
+    if (!confirm(`Delete ${ids.length} RFQ${ids.length === 1 ? "" : "s"}?`)) return
+    try {
+      await deleteRfqs(ids)
+      setSelected(new Set())
+      toast.success(`${ids.length} RFQ${ids.length === 1 ? "" : "s"} deleted`)
+      if (selectedOnPage.length === pageIds.length && offset > 0) {
+        setOffset(Math.max(0, offset - limit))
+      }
+    } catch {
+      toast.error("Failed to delete RFQs")
+    }
+  }
 
   const count: number = data?.count ?? 0
   const pageCount = Math.max(1, Math.ceil(count / limit))
@@ -196,6 +245,15 @@ const RfqsPage = () => {
       <Button variant="secondary" onClick={handleClear}>
         Clear
       </Button>
+
+      <Button
+        variant="danger"
+        onClick={handleDeleteSelected}
+        disabled={selected.size === 0}
+        isLoading={isDeleting}
+      >
+        <Trash /> Delete selected{selected.size > 0 ? ` (${selected.size})` : ""}
+      </Button>
     </div>
   )
 
@@ -229,6 +287,13 @@ const RfqsPage = () => {
         <Table>
           <Table.Header>
             <Table.Row>
+              <Table.HeaderCell className="w-[40px]">
+                <Checkbox
+                  checked={allPageSelected ? true : somePageSelected ? "indeterminate" : false}
+                  onCheckedChange={toggleAllOnPage}
+                  aria-label="Select all RFQs on this page"
+                />
+              </Table.HeaderCell>
               <Table.HeaderCell>Customer Name</Table.HeaderCell>
               <Table.HeaderCell>Company</Table.HeaderCell>
               <Table.HeaderCell>Email</Table.HeaderCell>
@@ -244,6 +309,13 @@ const RfqsPage = () => {
                 className="cursor-pointer"
                 onClick={() => navigate(`/rfqs/${rfq.id}`)}
               >
+                <Table.Cell onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selected.has(rfq.id)}
+                    onCheckedChange={() => toggleOne(rfq.id)}
+                    aria-label={`Select RFQ ${rfq.customer_name}`}
+                  />
+                </Table.Cell>
                 <Table.Cell>{rfq.customer_name}</Table.Cell>
                 <Table.Cell>{rfq.company_name || '-'}</Table.Cell>
                 <Table.Cell>{rfq.customer_email}</Table.Cell>

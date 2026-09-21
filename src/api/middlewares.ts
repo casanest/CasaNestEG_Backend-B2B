@@ -15,7 +15,7 @@ import multer from 'multer';
 import { storeSearchRoutesMiddlewares } from './store/search/middlewares';
 import { PostStoreRfq } from './store/rfq/validators';
 import { PostStoreAppointment } from './store/appointments/validators';
-import { GetAdminAppointmentsParams } from './admin/appointments/validators';
+import { DeleteAdminAppointmentsBody, GetAdminAppointmentsParams } from './admin/appointments/validators';
 import { listAppointmentsQueryConfig } from './admin/appointments/query-config';
 import { PatchAdminAppointment } from './admin/appointments/[id]/validators';
 import { PostProductCustomSchema } from './admin/products/[id]/custom/validators';
@@ -28,7 +28,7 @@ import { PostAdminPackageTitleUpdateSchema, PostAdminAttachProductsSchema } from
 import { PostAdminTestimonialSchema, PostAdminTestimonialUpdateSchema } from './admin/testimonials/validators';
 import { PostAdminBannerSchema, PostAdminBannerUpdateSchema } from './admin/banners/validators';
 import { PostAdminSocialMediaSchema, PostAdminSocialMediaUpdateSchema } from './admin/social-media/validators';
-import { GetAdminRfqsParams } from './admin/rfq/validators';
+import { DeleteAdminRfqsBody, GetAdminRfqsParams } from './admin/rfq/validators';
 import { listRfqsQueryConfig } from './admin/rfq/query-config';
 import { PatchAdminRfq } from './admin/rfq/[id]/validators';
 import { PostAdminRfqComment } from './admin/rfq/[id]/comments/validators';
@@ -83,6 +83,11 @@ export default defineMiddlewares({
     middlewares: [
       validateAndTransformQuery(GetAdminAppointmentsParams, listAppointmentsQueryConfig),
     ],
+  },
+  {
+    matcher: '/admin/appointments',
+    method: 'DELETE',
+    middlewares: [validateAndTransformBody(DeleteAdminAppointmentsBody)],
   },
   {
     matcher: '/admin/appointments/:id',
@@ -210,6 +215,11 @@ export default defineMiddlewares({
     middlewares: [
       validateAndTransformQuery(GetAdminRfqsParams, listRfqsQueryConfig),
     ],
+  },
+  {
+    matcher: '/admin/rfq',
+    method: 'DELETE',
+    middlewares: [validateAndTransformBody(DeleteAdminRfqsBody)],
   },
   {
     matcher: '/admin/rfq/:id',
