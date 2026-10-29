@@ -28,7 +28,7 @@ const galleryImageSchema = z.object({
 
 export const PostAdminPortfolioProjectSchema = z.object({
   category_id: z.string().min(1),
-  slug: z.string().min(1),
+  slug: z.string().trim().min(1),
   title_en: z.string().min(1),
   title_ar: z.string().min(1),
   location_en: z.string().min(1),
@@ -51,7 +51,7 @@ export type PostAdminPortfolioProjectSchema = z.infer<
 
 export const PostAdminPortfolioProjectUpdateSchema = z.object({
   category_id: z.string().min(1).optional(),
-  slug: z.string().min(1).optional(),
+  slug: z.string().trim().min(1).optional(),
   title_en: z.string().min(1).optional(),
   title_ar: z.string().min(1).optional(),
   location_en: z.string().min(1).optional(),

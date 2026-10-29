@@ -20,7 +20,7 @@ export async function GET(
   const { data: categories } = await query.graph({
     entity: "project_category",
     fields: ["id", "slug", "name_en", "name_ar"],
-    filters: { slug },
+    filters: { slug: slug?.trim() },
   })
 
   if (!categories || categories.length === 0) {

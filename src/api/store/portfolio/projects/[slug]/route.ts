@@ -11,6 +11,8 @@ export async function GET(
   const { slug } = req.params
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
+  const normalizedSlug = slug?.trim()
+
   const { data: projects } = await query.graph({
     entity: "project",
     fields: [
@@ -34,7 +36,7 @@ export async function GET(
       "sub_paragraphs.*",
       "gallery_images.*",
     ],
-    filters: { slug },
+    filters: { slug: normalizedSlug },
   })
 
   if (!projects || projects.length === 0) {
